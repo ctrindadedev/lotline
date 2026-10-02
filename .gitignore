@@ -1,0 +1,33 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Local agent guidance
+CLAUDE.md
+.claude/
+
+# Backend (Gradle)
+.gradle/
+backend/build/
+backend/bin/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Frontend (Node / Vite)
+node_modules/
+frontend/dist/
+frontend/coverage/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
