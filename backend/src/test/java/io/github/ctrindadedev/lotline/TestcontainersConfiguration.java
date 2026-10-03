@@ -13,7 +13,6 @@ import org.testcontainers.utility.DockerImageName;
 @TestConfiguration(proxyBeanMethods = false)
 public class TestcontainersConfiguration {
 
-  // Same image as docker-compose.yml; there is no Debian 17-3.6 tag.
   private static final DockerImageName POSTGIS =
       DockerImageName.parse("postgis/postgis:17-3.6-alpine").asCompatibleSubstituteFor("postgres");
 
