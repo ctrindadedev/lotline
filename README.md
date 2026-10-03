@@ -30,4 +30,10 @@ Map-based marketplace for land plots: sellers draw a plot's exact boundary on an
 
 ### Coverage exclusions
 
-<!-- Every file excluded from coverage, with the reason. -->
+Both sides fail the build below 80%: `./gradlew check` (JaCoCo, line coverage) and `npm run test:coverage` (Vitest v8: lines, statements, functions and branches). The exclusions are kept minimal:
+
+| Side     | Excluded                                | Reason                                                                                                        |
+| -------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Backend  | `LotlineApplication`                    | Only the `main` method that starts Spring; the application context itself is booted by the integration tests. |
+| Frontend | `src/main.tsx`                          | Only mounts `<App />` into the DOM; `App` is tested directly.                                                 |
+| Frontend | `src/test/**`, `*.test.ts(x)`, `*.d.ts` | Test setup, tests and type declarations, not application code.                                                |
