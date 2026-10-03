@@ -1,6 +1,9 @@
 package io.github.ctrindadedev.lotline.plot.persistence;
 
+import static io.github.ctrindadedev.lotline.plot.TestGeometries.SQUARE_WKT;
+import static io.github.ctrindadedev.lotline.plot.TestGeometries.polygon;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.withinPercentage;
 
 import io.github.ctrindadedev.lotline.IntegrationTest;
 import jakarta.persistence.EntityManager;
@@ -22,6 +25,24 @@ class PlotRepositoryTests {
 
   @Autowired PlotRepository repository;
   @Autowired EntityManager entityManager;
+
+  @Test
+  void bindsAPolygonParameterKeepingItsSrid() {
+    Object srid =
+        entityManager
+            .createNativeQuery("SELECT ST_SRID(:boundary)")
+            .setParameter("boundary", polygon(SQUARE_WKT))
+            .getSingleResult();
+
+    assertThat(srid).isEqualTo(4326);
+  }
+
+  @Test
+  void measuresAreaInSquareMetersOnTheEarthSurface() {
+    // 0.01 deg of longitude at 22 S is about 1,032 m; 0.01 deg of latitude is about 1,106 m.
+    assertThat(repository.areaInSquareMeters(polygon(SQUARE_WKT)))
+        .isCloseTo(1_141_000, withinPercentage(2));
+  }
 
   @Test
   void persistsAndReadsBackAPlotWithItsPolygonIntact() throws ParseException {
