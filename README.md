@@ -18,6 +18,8 @@ Map-based marketplace for land plots: sellers draw a plot's exact boundary on an
 
 <!-- Step-by-step: prerequisites, .env, docker compose up, URLs. -->
 
+> **Apple Silicon:** the `postgis/postgis` image is published for amd64 only. The `db` service sets `platform: linux/amd64`, so it runs under emulation (slower start, same behavior).
+
 ## Running without Docker
 
 <!-- Local development: database, backend, frontend. -->
