@@ -12,6 +12,11 @@ public interface PlotRepository extends JpaRepository<Plot, UUID> {
   @Query(value = "SELECT ST_Area(CAST(:boundary AS geography))", nativeQuery = true)
   double areaInSquareMeters(@Param("boundary") Polygon boundary);
 
+  @Query(
+      value = "SELECT true FROM pg_advisory_xact_lock(hashtext('plot-registration'))",
+      nativeQuery = true)
+  boolean lockRegistrationsUntilCommit();
+
   // Segmentize first: the geography cast reads edges as great-circle arcs and inflates slivers.
   @Query(
       value =
