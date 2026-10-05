@@ -25,6 +25,8 @@ public class PlotService {
   @Transactional
   public PlotDetails create(NewPlot newPlot) {
     geometryValidator.validate(newPlot.boundary());
+    // Lock before the overlap query, so it sees a concurrent registration once that one commits.
+    plotRepository.lockRegistrationsUntilCommit();
     List<UUID> overlappingIds =
         plotRepository.findOverlappingIds(newPlot.boundary(), OVERLAP_TOLERANCE_SQUARE_METERS);
     if (!overlappingIds.isEmpty()) {
