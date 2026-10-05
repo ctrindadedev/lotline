@@ -46,4 +46,11 @@ public class PlotService {
         .map(PlotDetails::from)
         .orElseThrow(() -> new PlotNotFoundException(id));
   }
+
+  @Transactional(readOnly = true)
+  public List<PlotDetails> searchWithinRadius(double lat, double lng, double radiusMeters) {
+    return plotRepository.findWithinRadius(lat, lng, radiusMeters).stream()
+        .map(PlotDetails::from)
+        .toList();
+  }
 }

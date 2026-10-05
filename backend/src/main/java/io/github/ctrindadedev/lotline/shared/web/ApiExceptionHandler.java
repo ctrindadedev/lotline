@@ -15,6 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -35,6 +36,29 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     List<FieldError> errors =
         ex.getFieldErrors().stream()
             .map(error -> new FieldError(error.getField(), error.getDefaultMessage()))
+            .toList();
+    ProblemDetail problem = ex.getBody();
+    problem.setDetail("One or more fields are invalid");
+    problem.setProperty("errors", errors);
+    return handleExceptionInternal(ex, problem, headers, status, request);
+  }
+
+  @Override
+  protected ResponseEntity<Object> handleHandlerMethodValidationException(
+      HandlerMethodValidationException ex,
+      HttpHeaders headers,
+      HttpStatusCode status,
+      WebRequest request) {
+    List<FieldError> errors =
+        ex.getParameterValidationResults().stream()
+            .flatMap(
+                result ->
+                    result.getResolvableErrors().stream()
+                        .map(
+                            error ->
+                                new FieldError(
+                                    result.getMethodParameter().getParameterName(),
+                                    error.getDefaultMessage())))
             .toList();
     ProblemDetail problem = ex.getBody();
     problem.setDetail("One or more fields are invalid");

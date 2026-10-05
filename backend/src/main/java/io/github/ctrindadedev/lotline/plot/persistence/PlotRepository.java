@@ -9,6 +9,15 @@ import org.springframework.data.repository.query.Param;
 
 public interface PlotRepository extends JpaRepository<Plot, UUID> {
 
+  String WITHIN_RADIUS_SQL =
+      """
+      SELECT p.* FROM plots p
+      WHERE ST_DWithin(CAST(p.boundary AS geography),
+          CAST(ST_SetSRID(ST_MakePoint(:lng, :lat), 4326) AS geography), :radiusMeters)
+      ORDER BY ST_Distance(CAST(p.boundary AS geography),
+          CAST(ST_SetSRID(ST_MakePoint(:lng, :lat), 4326) AS geography)), p.id
+      """;
+
   @Query(value = "SELECT ST_Area(CAST(:boundary AS geography))", nativeQuery = true)
   double areaInSquareMeters(@Param("boundary") Polygon boundary);
 
@@ -33,4 +42,10 @@ public interface PlotRepository extends JpaRepository<Plot, UUID> {
   List<UUID> findOverlappingIds(
       @Param("boundary") Polygon boundary,
       @Param("toleranceSquareMeters") double toleranceSquareMeters);
+
+  @Query(value = WITHIN_RADIUS_SQL, nativeQuery = true)
+  List<Plot> findWithinRadius(
+      @Param("lat") double lat,
+      @Param("lng") double lng,
+      @Param("radiusMeters") double radiusMeters);
 }
