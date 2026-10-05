@@ -18,7 +18,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Search centred on [-47, -22] near Campinas. Distances measured with PostGIS geography. */
 @IntegrationTest
 @AutoConfigureMockMvc
 @Transactional
