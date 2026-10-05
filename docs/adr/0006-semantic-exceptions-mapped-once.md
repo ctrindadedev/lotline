@@ -38,3 +38,5 @@ Errors are raised in several layers of each module. The GeoJSON mapper (`web`) a
 - A new module gets correct error responses by extending the right base, with no change to the handler (open/closed).
 - Business code stays free of HTTP types and is testable without a web context.
 - The base set stays small on purpose. A new base is only added for a new kind of outcome, not for a new module.
+- The framework's own errors (malformed JSON, a path id that is not a UUID, unknown route, unsupported method or media type) already come out as `ProblemDetail` through `ResponseEntityExceptionHandler`. The handler only overrides the unknown-route message, which otherwise mentions "static resources".
+- The catch-all handler for `Exception` catches everything Spring MVC does not map itself. When Spring Security arrives, exceptions it raises inside controllers (e.g. `AccessDeniedException` from method security) would become a 500 instead of a 403, so they must be mapped explicitly then. Errors raised in servlet filters never reach this handler at all.
