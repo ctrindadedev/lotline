@@ -8,6 +8,8 @@ import static org.assertj.core.api.Assertions.withinPercentage;
 import io.github.ctrindadedev.lotline.IntegrationTest;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Polygon;
@@ -15,6 +17,7 @@ import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 @IntegrationTest
@@ -25,6 +28,22 @@ class PlotRepositoryTests {
 
   @Autowired PlotRepository repository;
   @Autowired EntityManager entityManager;
+  @Autowired JdbcTemplate jdbcTemplate;
+
+  @Test
+  void radiusSearchCanUseTheGeographyIndex() {
+    // A tiny table is seq-scanned anyway; forbid it to see whether the index is usable at all
+    jdbcTemplate.execute("SET LOCAL enable_seqscan = off");
+    String sql =
+        PlotRepository.WITHIN_RADIUS_SQL
+            .replace(":lng", "-47.0")
+            .replace(":lat", "-22.0")
+            .replace(":radiusMeters", "1000");
+
+    List<Map<String, Object>> plan = jdbcTemplate.queryForList("EXPLAIN " + sql);
+
+    assertThat(plan.toString()).contains("plots_boundary_geography_idx");
+  }
 
   @Test
   void bindsAPolygonParameterKeepingItsSrid() {

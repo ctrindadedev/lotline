@@ -52,7 +52,14 @@ class ApiErrorShapeTests {
             "unsupported media type",
             post("/api/v1/plots").contentType(MediaType.TEXT_PLAIN).content("x"),
             415),
-        Arguments.of("invalid geometry", json(post("/api/v1/plots"), plot(BOWTIE)), 422));
+        Arguments.of("invalid geometry", json(post("/api/v1/plots"), plot(BOWTIE)), 422),
+        Arguments.of("search latitude out of range", search("91", "-47", "100"), 400),
+        Arguments.of("search radius above the maximum", search("-22", "-47", "50001"), 400),
+        Arguments.of("search radius not a number", search("-22", "-47", "abc"), 400),
+        Arguments.of("search radius NaN", search("-22", "-47", "NaN"), 400),
+        Arguments.of("search radius Infinity", search("-22", "-47", "Infinity"), 400),
+        Arguments.of("search latitude NaN", search("NaN", "-47", "100"), 400),
+        Arguments.of("search parameter missing", get("/api/v1/plots/search?lat=-22&lng=-47"), 400));
   }
 
   @ParameterizedTest(name = "{0} -> {2}")
@@ -89,6 +96,13 @@ class ApiErrorShapeTests {
   private static MockHttpServletRequestBuilder json(
       MockHttpServletRequestBuilder request, String body) {
     return request.contentType(MediaType.APPLICATION_JSON).content(body);
+  }
+
+  private static MockHttpServletRequestBuilder search(String lat, String lng, String radius) {
+    return get("/api/v1/plots/search")
+        .param("lat", lat)
+        .param("lng", lng)
+        .param("radiusMeters", radius);
   }
 
   private static String plot(String boundary) {
