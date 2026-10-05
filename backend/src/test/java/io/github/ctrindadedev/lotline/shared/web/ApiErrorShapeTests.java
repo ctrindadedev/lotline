@@ -1,0 +1,98 @@
+package io.github.ctrindadedev.lotline.shared.web;
+
+import static org.hamcrest.Matchers.emptyOrNullString;
+import static org.hamcrest.Matchers.not;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import io.github.ctrindadedev.lotline.IntegrationTest;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.transaction.annotation.Transactional;
+
+/** Every error path of the API answers with the same RFC 9457 shape. See ADR 0006. */
+@IntegrationTest
+@AutoConfigureMockMvc
+@Transactional
+class ApiErrorShapeTests {
+
+  private static final String UNKNOWN_ID = "0199a0a0-0000-7000-8000-000000000000";
+  private static final String SQUARE =
+      "{\"type\": \"Polygon\", \"coordinates\": [[[-47.0, -22.0], [-46.99, -22.0],"
+          + " [-46.99, -21.99], [-47.0, -21.99], [-47.0, -22.0]]]}";
+  private static final String BOWTIE =
+      "{\"type\": \"Polygon\", \"coordinates\": [[[-47.0, -22.0], [-46.99, -21.99],"
+          + " [-46.99, -22.0], [-47.0, -21.99], [-47.0, -22.0]]]}";
+
+  @Autowired MockMvc mockMvc;
+
+  static Stream<Arguments> errorPaths() {
+    return Stream.of(
+        Arguments.of("invalid fields", json(post("/api/v1/plots"), "{\"price\": -1}"), 400),
+        Arguments.of("malformed JSON", json(post("/api/v1/plots"), "{\"price\": "), 400),
+        Arguments.of("wrong field type", json(post("/api/v1/plots"), "{\"price\": \"abc\"}"), 400),
+        Arguments.of("id that is not a UUID", get("/api/v1/plots/abc"), 400),
+        Arguments.of("unknown plot", get("/api/v1/plots/" + UNKNOWN_ID), 404),
+        Arguments.of("unknown route", get("/api/v1/nope"), 404),
+        Arguments.of("unsupported method", delete("/api/v1/plots"), 405),
+        Arguments.of(
+            "unsupported media type",
+            post("/api/v1/plots").contentType(MediaType.TEXT_PLAIN).content("x"),
+            415),
+        Arguments.of("invalid geometry", json(post("/api/v1/plots"), plot(BOWTIE)), 422));
+  }
+
+  @ParameterizedTest(name = "{0} -> {2}")
+  @MethodSource("errorPaths")
+  void answersWithAProblemDetail(String name, MockHttpServletRequestBuilder request, int status)
+      throws Exception {
+    assertProblem(mockMvc.perform(request), status);
+  }
+
+  @Test
+  void answersAnOverlapWithAProblemDetail() throws Exception {
+    mockMvc.perform(json(post("/api/v1/plots"), plot(SQUARE)));
+
+    assertProblem(mockMvc.perform(json(post("/api/v1/plots"), plot(SQUARE))), 409);
+  }
+
+  @Test
+  void namesTheMissingEndpointWithoutInternalDetails() throws Exception {
+    mockMvc
+        .perform(get("/api/v1/nope"))
+        .andExpect(jsonPath("$.detail").value("No endpoint GET /api/v1/nope"));
+  }
+
+  private static void assertProblem(ResultActions result, int status) throws Exception {
+    result
+        .andExpect(status().is(status))
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.status").value(status))
+        .andExpect(jsonPath("$.title", not(emptyOrNullString())))
+        .andExpect(jsonPath("$.detail", not(emptyOrNullString())))
+        .andExpect(jsonPath("$.instance", not(emptyOrNullString())));
+  }
+
+  private static MockHttpServletRequestBuilder json(
+      MockHttpServletRequestBuilder request, String body) {
+    return request.contentType(MediaType.APPLICATION_JSON).content(body);
+  }
+
+  private static String plot(String boundary) {
+    return "{\"boundary\": %s, \"price\": 1000, \"description\": \"A plot\", \"contact\": \"seller@example.com\"}"
+        .formatted(boundary);
+  }
+}
