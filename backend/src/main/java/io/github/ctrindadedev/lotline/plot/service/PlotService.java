@@ -1,14 +1,18 @@
 package io.github.ctrindadedev.lotline.plot.service;
 
 import io.github.ctrindadedev.lotline.plot.exception.PlotNotFoundException;
+import io.github.ctrindadedev.lotline.plot.exception.PlotOverlapException;
 import io.github.ctrindadedev.lotline.plot.persistence.Plot;
 import io.github.ctrindadedev.lotline.plot.persistence.PlotRepository;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PlotService {
+
+  static final double OVERLAP_TOLERANCE_SQUARE_METERS = 1;
 
   private final PlotRepository plotRepository;
   private final PlotGeometryValidator geometryValidator;
@@ -21,6 +25,11 @@ public class PlotService {
   @Transactional
   public PlotDetails create(NewPlot newPlot) {
     geometryValidator.validate(newPlot.boundary());
+    List<UUID> overlappingIds =
+        plotRepository.findOverlappingIds(newPlot.boundary(), OVERLAP_TOLERANCE_SQUARE_METERS);
+    if (!overlappingIds.isEmpty()) {
+      throw new PlotOverlapException(overlappingIds);
+    }
     Plot plot =
         plotRepository.saveAndFlush(
             new Plot(

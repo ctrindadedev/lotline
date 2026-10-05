@@ -89,6 +89,20 @@ class PlotControllerTests {
   }
 
   @Test
+  void rejectsAnOverlappingPlotWith409() throws Exception {
+    String request = body(SQUARE, "1000", "\"First\"", "\"seller@example.com\"");
+    mockMvc
+        .perform(post("/api/v1/plots").contentType(MediaType.APPLICATION_JSON).content(request))
+        .andExpect(status().isCreated());
+
+    mockMvc
+        .perform(post("/api/v1/plots").contentType(MediaType.APPLICATION_JSON).content(request))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.status").value(409))
+        .andExpect(jsonPath("$.detail", startsWith("The boundary overlaps existing plots: ")));
+  }
+
+  @Test
   void answers404ForAnUnknownPlot() throws Exception {
     UUID id = UUID.randomUUID();
 

@@ -1,5 +1,6 @@
 package io.github.ctrindadedev.lotline.shared.web;
 
+import io.github.ctrindadedev.lotline.shared.ConflictException;
 import io.github.ctrindadedev.lotline.shared.NotFoundException;
 import io.github.ctrindadedev.lotline.shared.UnprocessableException;
 import java.util.List;
@@ -44,5 +45,10 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
   @ExceptionHandler(NotFoundException.class)
   ProblemDetail handleNotFound(NotFoundException ex) {
     return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+  }
+
+  @ExceptionHandler(ConflictException.class)
+  ProblemDetail handleConflict(ConflictException ex) {
+    return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
   }
 }
