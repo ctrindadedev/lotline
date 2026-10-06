@@ -3,6 +3,8 @@ import OlMap from 'ol/Map';
 import Circle from 'ol/geom/Circle';
 import Polygon from 'ol/geom/Polygon';
 import Draw, { DrawEvent } from 'ol/interaction/Draw';
+import Snap from 'ol/interaction/Snap';
+import VectorSource from 'ol/source/Vector';
 import { fromLonLat } from 'ol/proj';
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
@@ -15,6 +17,13 @@ function draws(map: OlMap) {
     .getInteractions()
     .getArray()
     .filter((interaction) => interaction instanceof Draw);
+}
+
+function snaps(map: OlMap) {
+  return map
+    .getInteractions()
+    .getArray()
+    .filter((interaction) => interaction instanceof Snap);
 }
 
 function finishDrawing(map: OlMap, feature: Feature) {
@@ -122,5 +131,78 @@ describe('useDrawInteraction', () => {
     finishDrawing(map, new Feature(new Circle(fromLonLat([-47.06, -22.9]), 0)));
 
     expect(onCircle).not.toHaveBeenCalled();
+  });
+
+  it('snaps a polygon to the given features, after the drawing, but never a circle', () => {
+    const map = new OlMap({});
+    const snapTo = new VectorSource();
+    const { rerender, unmount } = renderHook(
+      ({ shape }) => useDrawInteraction(map, shape, { snapTo }),
+      { initialProps: { shape: 'Polygon' as DrawShape } },
+    );
+    const interactions = map.getInteractions().getArray();
+
+    expect(snaps(map)).toHaveLength(1);
+    expect(interactions.indexOf(snaps(map)[0])).toBeGreaterThan(
+      interactions.indexOf(draws(map)[0]),
+    );
+
+    rerender({ shape: 'Circle' });
+    expect(snaps(map)).toHaveLength(0);
+
+    rerender({ shape: 'Polygon' });
+    unmount();
+    expect(snaps(map)).toHaveLength(0);
+  });
+
+  it("puts a corner snapped to a neighbour's edge exactly on that edge, in degrees", () => {
+    const map = new OlMap({});
+    const neighbour = new Feature(
+      new Polygon([
+        [
+          [-47.01, -22],
+          [-47, -22],
+          [-46.99, -22.009],
+          [-47.01, -22.009],
+          [-47.01, -22],
+        ].map((c) => fromLonLat(c)),
+      ]),
+    );
+    const onPolygon = vi.fn<(polygon: GeoJsonPolygon) => void>();
+    renderHook(() =>
+      useDrawInteraction(map, 'Polygon', {
+        onPolygon,
+        snapTo: new VectorSource({ features: [neighbour] }),
+      }),
+    );
+    const [a, b] = [fromLonLat([-47, -22]), fromLonLat([-46.99, -22.009])];
+    const middle = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+
+    finishDrawing(
+      map,
+      new Feature(
+        new Polygon([
+          [middle, fromLonLat([-46.98, -22.004]), fromLonLat([-46.98, -22.01]), middle],
+        ]),
+      ),
+    );
+
+    const [corner] = onPolygon.mock.calls[0][0].coordinates[0];
+    expect(corner).toEqual([-46.995, -22.0045]);
+  });
+
+  it('removes the last corner of the drawing on undo, and does nothing without one', () => {
+    const removeLastPoint = vi.spyOn(Draw.prototype, 'removeLastPoint');
+    const map = new OlMap({});
+    const { result, rerender } = renderHook(({ shape }) => useDrawInteraction(map, shape), {
+      initialProps: { shape: 'Polygon' as DrawShape | null },
+    });
+
+    result.current.undoLastPoint();
+    rerender({ shape: null });
+    result.current.undoLastPoint();
+
+    expect(removeLastPoint).toHaveBeenCalledOnce();
+    removeLastPoint.mockRestore();
   });
 });

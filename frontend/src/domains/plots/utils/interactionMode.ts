@@ -1,3 +1,4 @@
+import { messages } from '../../../shared/i18n/messages';
 import type { CircleArea } from '../../../shared/map/geodesy';
 import type { GeoJsonPolygon } from '../../../shared/map/geojson';
 import type { DrawShape } from '../../../shared/map/useDrawInteraction';
@@ -85,14 +86,14 @@ export function toolbarModeFor(mode: InteractionMode): 'drawingPlot' | 'drawingS
 export function interactionHint(mode: InteractionMode): string {
   switch (mode) {
     case 'drawingPlot':
-      return "Click on the map to place the plot's corners. Double-click to finish.";
+      return messages.hints.drawingPlot;
     case 'drawingSearch':
-      return 'Click the centre of the area, then click again to set the radius.';
+      return messages.hints.drawingSearch;
     case 'editingPlot':
-      return 'Fill in the details of the plot you drew.';
+      return messages.hints.editingPlot;
     case 'searching':
-      return 'Showing only the plots that reach into the circle. Narrow them with the filters.';
+      return messages.hints.searching;
     case 'idle':
-      return 'Pan and zoom the map to explore. Use the toolbar to list a plot or search an area.';
+      return messages.hints.idle;
   }
 }

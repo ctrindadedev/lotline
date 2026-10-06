@@ -5,6 +5,7 @@ import {
   toSearchFilters,
   validateSearchFilters,
 } from './searchFilters';
+import { messages } from '../../../shared/i18n/messages';
 
 const options = { fields: {}, shouldUseNativeValidation: false };
 
@@ -20,8 +21,8 @@ describe('validateSearchFilters', () => {
     expect(
       validateSearchFilters({ ...EMPTY_SEARCH_FILTERS, minPrice: '-1', maxArea: 'abc' }),
     ).toEqual({
-      minPrice: 'Use digits only, with up to 2 decimals (no thousands separators).',
-      maxArea: 'Use digits only, with up to 2 decimals (no thousands separators).',
+      minPrice: messages.searchFilters.number,
+      maxArea: messages.searchFilters.number,
     });
   });
 
@@ -29,7 +30,7 @@ describe('validateSearchFilters', () => {
     'rejects %j instead of reading a thousands separator as a decimal point',
     (maxPrice) => {
       expect(validateSearchFilters({ ...EMPTY_SEARCH_FILTERS, maxPrice }).maxPrice).toBe(
-        'Use digits only, with up to 2 decimals (no thousands separators).',
+        messages.searchFilters.number,
       );
     },
   );
@@ -47,8 +48,8 @@ describe('validateSearchFilters', () => {
     expect(
       validateSearchFilters({ minPrice: '200', maxPrice: '100', minArea: '50', maxArea: '10' }),
     ).toEqual({
-      maxPrice: 'Must not be below the minimum.',
-      maxArea: 'Must not be below the minimum.',
+      maxPrice: messages.searchFilters.maxBelowMin,
+      maxArea: messages.searchFilters.maxBelowMin,
     });
   });
 });
@@ -66,7 +67,7 @@ describe('searchFiltersResolver', () => {
       errors: {
         minArea: {
           type: 'validate',
-          message: 'Use digits only, with up to 2 decimals (no thousands separators).',
+          message: messages.searchFilters.number,
         },
       },
     });

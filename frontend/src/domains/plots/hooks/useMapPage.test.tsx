@@ -5,6 +5,7 @@ import type { GeoJsonPolygon } from '../../../shared/map/geojson';
 import { createQueryWrapper } from '../../../test/queryClient';
 import { EMPTY_PLOT_FORM } from '../utils/plotForm';
 import { useMapPage } from './useMapPage';
+import { messages } from '../../../shared/i18n/messages';
 
 const BOUNDARY: GeoJsonPolygon = {
   type: 'Polygon',
@@ -20,7 +21,8 @@ const BOUNDARY: GeoJsonPolygon = {
 
 const VALUES = { price: '1000', description: 'A plot', contact: 'seller@example.com' };
 
-const { plotDrawn, circleDrawn, closeDetails, detailsArgs } = vi.hoisted(() => ({
+const { plotDrawn, circleDrawn, closeDetails, detailsArgs, undoLastPoint } = vi.hoisted(() => ({
+  undoLastPoint: vi.fn<() => void>(),
   plotDrawn: { current: null as ((polygon: GeoJsonPolygon) => void) | null },
   circleDrawn: { current: null as ((circle: CircleArea) => void) | null },
   closeDetails: vi.fn<() => void>(),
@@ -46,6 +48,7 @@ vi.mock('../../../shared/map/useDrawInteraction', () => ({
   ) => {
     plotDrawn.current = handlers.onPolygon ?? null;
     circleDrawn.current = handlers.onCircle ?? null;
+    return { undoLastPoint };
   },
 }));
 
@@ -84,7 +87,7 @@ describe('useMapPage', () => {
 
     await waitFor(() => expect(result.current.mode).toBe('idle'));
     expect(result.current.plotForm).toBeNull();
-    expect(result.current.notice).toBe('Plot listed.');
+    expect(result.current.notice).toBe(messages.plotForm.saved);
     expect(JSON.parse(fetchMock.mock.calls[0][1]!.body as string)).toEqual({
       boundary: BOUNDARY,
       price: 1000,
@@ -116,7 +119,7 @@ describe('useMapPage', () => {
     act(() => result.current.toolbar.drawSearch());
     await act(async () => respond(Response.json({ id: 'new' }, { status: 201 })));
 
-    await waitFor(() => expect(result.current.notice).toBe('Plot listed.'));
+    await waitFor(() => expect(result.current.notice).toBe(messages.plotForm.saved));
     expect(result.current.mode).toBe('drawingSearch');
   });
 
@@ -134,10 +137,10 @@ describe('useMapPage', () => {
 
     await waitFor(() =>
       expect(result.current.plotForm!.form.getFieldState('price').error?.message).toBe(
-        'must be at most 1000',
+        messages.plotForm.errors.price,
       ),
     );
-    expect(result.current.plotForm!.alert).toBe('Check the highlighted fields.');
+    expect(result.current.plotForm!.alert.message).toBe(messages.plotForm.saveErrors.highlighted);
   });
 
   it('keeps the drawing, the error and the typed values through a redraw', async () => {
@@ -148,7 +151,9 @@ describe('useMapPage', () => {
 
     await fillAndSubmit(result);
 
-    await waitFor(() => expect(result.current.plotForm!.alert).toMatch(/overlaps/));
+    await waitFor(() =>
+      expect(result.current.plotForm!.alert.message).toBe(messages.plotForm.saveErrors.overlap),
+    );
     expect(result.current.mode).toBe('editingPlot');
 
     act(() => result.current.plotForm!.redraw());
@@ -156,7 +161,7 @@ describe('useMapPage', () => {
     expect(result.current.plotForm).toBeNull();
 
     act(() => plotDrawn.current!(BOUNDARY));
-    expect(result.current.plotForm!.alert).toBeNull();
+    expect(result.current.plotForm!.alert.message).toBeNull();
     expect(result.current.plotForm!.form.getValues()).toEqual(VALUES);
   });
 
@@ -169,7 +174,7 @@ describe('useMapPage', () => {
     act(() => circleDrawn.current!({ center: [-47.06, -22.9], radiusMeters: 1500 }));
 
     expect(result.current.mode).toBe('searching');
-    expect(result.current.searchPanel!.radius).toBe('1.5 km');
+    expect(result.current.searchPanel!.radius).toBe('1,5 km');
     await waitFor(() => expect(detailsArgs.plots).toEqual(results));
     expect(detailsArgs.enabled).toBe(true);
 
@@ -177,6 +182,41 @@ describe('useMapPage', () => {
     expect(result.current.mode).toBe('drawingSearch');
     expect(result.current.searchPanel).toBeNull();
     expect(detailsArgs.enabled).toBe(false);
+  });
+
+  it('leaves a drawing with Esc and removes the last corner with Ctrl+Z', () => {
+    undoLastPoint.mockClear();
+    const { result } = renderHook(() => useMapPage(), { wrapper: createQueryWrapper() });
+    act(() => result.current.toolbar.drawPlot());
+    expect(result.current.drawing).toEqual({ canUndo: true, undoLastPoint });
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true }));
+    });
+    expect(undoLastPoint).toHaveBeenCalledOnce();
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+    expect(result.current.mode).toBe('idle');
+    expect(result.current.drawing).toBeNull();
+  });
+
+  it('keeps a drawn plot and its form on Esc, and closes the details in idle', () => {
+    closeDetails.mockClear();
+    const { result } = renderPage();
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+    expect(result.current.mode).toBe('editingPlot');
+
+    act(() => result.current.plotForm!.cancel());
+    closeDetails.mockClear();
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+    expect(closeDetails).not.toHaveBeenCalled();
   });
 
   it('closes the plot details when the user starts drawing', () => {

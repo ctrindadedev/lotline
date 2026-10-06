@@ -1,7 +1,8 @@
 import { skipToken, useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { formatDistance, geodesicCircle } from '../../../shared/map/geodesy';
+import { formatDistance } from '../../../shared/i18n/format';
+import { geodesicCircle } from '../../../shared/map/geodesy';
 import { polygonCollection } from '../../../shared/map/geojson';
 import { searchPlots } from '../services/plots.api';
 import type { RadiusSearch } from '../types';

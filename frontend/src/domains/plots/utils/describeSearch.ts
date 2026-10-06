@@ -1,4 +1,7 @@
+import { messages } from '../../../shared/i18n/messages';
 import type { PlotFeatureCollection } from '../types';
+
+const text = messages.search;
 
 interface SearchState {
   results: PlotFeatureCollection | undefined;
@@ -8,16 +11,11 @@ interface SearchState {
 
 export function describeSearch({ results, isLoading, error }: SearchState): string {
   if (error) {
-    return `Could not search: ${error.message}`;
+    return text.failed;
   }
   if (isLoading || !results) {
-    return 'Searching…';
+    return text.searching;
   }
   const count = results.features.length;
-  if (count === 0) {
-    return 'No plots reach into this circle.';
-  }
-  return count === 1
-    ? '1 plot reaches into this circle.'
-    : `${count} plots reach into this circle.`;
+  return count === 0 ? text.none : text.count(count);
 }

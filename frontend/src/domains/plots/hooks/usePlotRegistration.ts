@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { messages } from '../../../shared/i18n/messages';
+import { polygonAreaSquareMeters } from '../../../shared/map/geodesy';
 import { polygonCollection } from '../../../shared/map/geojson';
 import {
   describeSaveError,
@@ -25,7 +27,7 @@ export function usePlotRegistration(interaction: Interaction) {
     onSuccess: () => {
       form.reset(EMPTY_PLOT_FORM);
       interaction.plotSaved();
-      setNotice('Plot listed.');
+      setNotice(messages.plotForm.saved);
     },
     onError: (error) => {
       for (const [field, message] of Object.entries(describeSaveError(error).fieldErrors)) {
@@ -73,7 +75,8 @@ export function usePlotRegistration(interaction: Interaction) {
     form: boundary
       ? {
           form,
-          alert: describeSaveError(createPlot.error).message,
+          areaSquareMeters: polygonAreaSquareMeters(boundary),
+          alert: describeSaveError(createPlot.error),
           isSaving: createPlot.isPending,
           submit,
           redraw,

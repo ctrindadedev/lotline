@@ -1,4 +1,7 @@
+import { messages } from '../../../shared/i18n/messages';
 import type { PlotsInView } from '../hooks/usePlotsInView';
+
+const text = messages.plotsInView;
 
 export function describePlotsInView({
   mapReady,
@@ -8,20 +11,17 @@ export function describePlotsInView({
   error,
 }: PlotsInView): string {
   if (!mapReady) {
-    return 'Loading the map…';
+    return text.mapLoading;
   }
   if (!zoomedIn) {
-    return 'Zoom in to see the plots in this area.';
+    return text.zoomIn;
   }
   if (error) {
-    return `Could not load plots: ${error.message}`;
+    return text.failed;
   }
   if (isLoading || !plots) {
-    return 'Loading plots…';
+    return text.loading;
   }
   const count = plots.features.length;
-  if (count === 0) {
-    return 'No plots in this area yet.';
-  }
-  return count === 1 ? '1 plot in this area.' : `${count} plots in this area.`;
+  return count === 0 ? text.none : text.count(count);
 }

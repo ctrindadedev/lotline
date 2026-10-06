@@ -3,7 +3,10 @@ import TravelExploreIcon from '@mui/icons-material/TravelExplore';
 import Paper from '@mui/material/Paper';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import { messages } from '../../../shared/i18n/messages';
 import { toolbarModeFor, type InteractionMode } from '../utils/interactionMode';
+
+const text = messages.toolbar;
 
 interface MapToolbarProps {
   mode: InteractionMode;
@@ -44,15 +47,15 @@ export function MapToolbar({
         value={toolbarModeFor(mode)}
         onChange={handleChange}
         disabled={disabled}
-        aria-label="Map mode"
+        aria-label={text.modes}
       >
         <ToggleButton value="drawingPlot">
           <AddLocationAltIcon fontSize="small" sx={{ mr: 1 }} />
-          {editing ? 'Editing plot' : 'List a plot'}
+          {editing ? text.editingPlot : text.listPlot}
         </ToggleButton>
         <ToggleButton value="drawingSearch">
           <TravelExploreIcon fontSize="small" sx={{ mr: 1 }} />
-          Search an area
+          {text.searchArea}
         </ToggleButton>
       </ToggleButtonGroup>
     </Paper>

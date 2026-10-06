@@ -39,11 +39,6 @@ export function geodesicCircle({ center, radiusMeters }: CircleArea): GeoJsonPol
   return { type: 'Polygon', coordinates: ring as Position[][] };
 }
 
-export function formatDistance(meters: number): string {
-  const rounded = Math.round(meters);
-  return rounded < 1000 ? `${rounded} m` : `${(meters / 1000).toFixed(1)} km`;
-}
-
 function round(value: number, decimals: number): number {
   const factor = 10 ** decimals;
   return Math.round(value * factor) / factor;

@@ -5,9 +5,12 @@ import TextField, { type TextFieldProps } from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import type { BaseSyntheticEvent } from 'react';
 import { Controller, type Control, type UseFormReturn } from 'react-hook-form';
-import { formatDistance } from '../../../shared/map/geodesy';
+import { formatDistance } from '../../../shared/i18n/format';
+import { messages } from '../../../shared/i18n/messages';
 import { MAX_SEARCH_RADIUS_METERS } from '../hooks/usePlotSearch';
 import type { SearchFilterValues } from '../utils/searchFilters';
+
+const text = messages.search;
 
 interface SearchPanelProps {
   form: UseFormReturn<SearchFilterValues>;
@@ -31,10 +34,10 @@ export function SearchPanel({
   return (
     <Stack spacing={2}>
       <div>
-        <Typography variant="body2">Radius: {radius}</Typography>
+        <Typography variant="body2">{text.radius(radius)}</Typography>
         {capped && (
           <Typography variant="caption" color="text.secondary">
-            Searches are limited to {formatDistance(MAX_SEARCH_RADIUS_METERS)}.
+            {text.capped(formatDistance(MAX_SEARCH_RADIUS_METERS))}
           </Typography>
         )}
         <Typography role="status" variant="subtitle2" sx={{ mt: 1 }}>
@@ -46,30 +49,30 @@ export function SearchPanel({
         noValidate
         spacing={1.5}
         onSubmit={onApplyFilters}
-        aria-label="Filters"
+        aria-label={text.filters}
       >
         <Typography variant="subtitle2" component="h3">
-          Filters
+          {text.filters}
         </Typography>
         <Stack direction="row" spacing={1}>
-          <FilterField name="minPrice" control={form.control} label="Min price" unit="R$" />
-          <FilterField name="maxPrice" control={form.control} label="Max price" unit="R$" />
+          <FilterField name="minPrice" control={form.control} label={text.minPrice} unit="R$" />
+          <FilterField name="maxPrice" control={form.control} label={text.maxPrice} unit="R$" />
         </Stack>
         <Stack direction="row" spacing={1}>
-          <FilterField name="minArea" control={form.control} label="Min area" unit="m²" end />
-          <FilterField name="maxArea" control={form.control} label="Max area" unit="m²" end />
+          <FilterField name="minArea" control={form.control} label={text.minArea} unit="m²" end />
+          <FilterField name="maxArea" control={form.control} label={text.maxArea} unit="m²" end />
         </Stack>
         <Stack direction="row" spacing={1}>
           <Button type="submit" variant="contained" size="small">
-            Apply filters
+            {text.apply}
           </Button>
           <Button size="small" onClick={onClearFilters}>
-            Clear
+            {text.clear}
           </Button>
         </Stack>
       </Stack>
       <Button variant="outlined" onClick={onNewSearch}>
-        Draw a new circle
+        {text.newCircle}
       </Button>
     </Stack>
   );

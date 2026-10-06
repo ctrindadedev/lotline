@@ -1,4 +1,5 @@
 import type { FieldErrors, Resolver } from 'react-hook-form';
+import { messages } from '../../../shared/i18n/messages';
 import type { RadiusSearch } from '../types';
 
 export interface SearchFilterValues {
@@ -40,7 +41,7 @@ export function validateSearchFilters(
   const errors: Partial<Record<FilterField, string>> = {};
   for (const field of Object.keys(values) as FilterField[]) {
     if (parse(values[field]) === null) {
-      errors[field] = 'Use digits only, with up to 2 decimals (no thousands separators).';
+      errors[field] = messages.searchFilters.number;
     }
   }
   for (const [min, max] of [
@@ -50,7 +51,7 @@ export function validateSearchFilters(
     const low = parse(values[min]);
     const high = parse(values[max]);
     if (typeof low === 'number' && typeof high === 'number' && low > high) {
-      errors[max] = 'Must not be below the minimum.';
+      errors[max] = messages.searchFilters.maxBelowMin;
     }
   }
   return errors;

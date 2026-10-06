@@ -4,14 +4,17 @@ import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { polygonAreaSquareMeters } from '../../../shared/map/geodesy';
-import type { PlotFeature } from '../types';
 import {
   formatArea,
-  formatListedDate,
+  formatDate,
   formatPrice,
   formatPricePerSquareMeter,
-} from '../utils/plotFormat';
+} from '../../../shared/i18n/format';
+import { messages } from '../../../shared/i18n/messages';
+import { polygonAreaSquareMeters } from '../../../shared/map/geodesy';
+import type { PlotFeature } from '../types';
+
+const text = messages.popup;
 
 interface PlotPopupProps {
   plot: PlotFeature;
@@ -26,7 +29,7 @@ export function PlotPopup({ plot, onClose }: PlotPopupProps) {
     <Paper
       elevation={6}
       role="dialog"
-      aria-label="Plot details"
+      aria-label={text.label}
       sx={{ width: 300, maxWidth: '80vw', p: 2 }}
     >
       <Stack direction="row" sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
@@ -38,7 +41,12 @@ export function PlotPopup({ plot, onClose }: PlotPopupProps) {
             {formatArea(area)} · {formatPricePerSquareMeter(price, area)}
           </Typography>
         </div>
-        <IconButton aria-label="Close" size="small" onClick={onClose} sx={{ mt: -0.5, mr: -1 }}>
+        <IconButton
+          aria-label={text.close}
+          size="small"
+          onClick={onClose}
+          sx={{ mt: -0.5, mr: -1 }}
+        >
           <CloseIcon fontSize="small" />
         </IconButton>
       </Stack>
@@ -47,10 +55,10 @@ export function PlotPopup({ plot, onClose }: PlotPopupProps) {
         {description}
       </Typography>
       <Typography variant="body2">
-        <strong>Contact:</strong> {contact}
+        <strong>{text.contact}</strong> {contact}
       </Typography>
       <Typography variant="caption" color="text.secondary">
-        Listed on {formatListedDate(createdAt)}
+        {text.listedOn(formatDate(createdAt))}
       </Typography>
     </Paper>
   );

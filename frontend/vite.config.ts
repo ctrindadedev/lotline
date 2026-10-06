@@ -11,6 +11,8 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    // Typing into MUI fields under coverage can pass 5 s on a cold CI runner.
+    testTimeout: 15_000,
     setupFiles: ['./src/test/setup.ts'],
     coverage: {
       provider: 'v8',

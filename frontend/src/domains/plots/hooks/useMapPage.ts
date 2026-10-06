@@ -1,3 +1,4 @@
+import { isTyping, useKeyDown } from '../../../shared/hooks/useKeyDown';
 import { draftStyle, searchAreaStyle } from '../../../shared/map/styles';
 import { useDrawInteraction } from '../../../shared/map/useDrawInteraction';
 import { useMap } from '../../../shared/map/useMap';
@@ -5,6 +6,7 @@ import { useMapViewport } from '../../../shared/map/useMapViewport';
 import { useVectorLayer } from '../../../shared/map/useVectorLayer';
 import { describePlotsInView } from '../utils/describePlotsInView';
 import { drawShapeFor, interactionHint } from '../utils/interactionMode';
+import { shortcutFor } from '../utils/shortcuts';
 import { useInteractionMode } from './useInteractionMode';
 import { usePlotDetails } from './usePlotDetails';
 import { usePlotRegistration } from './usePlotRegistration';
@@ -26,9 +28,10 @@ export function useMapPage() {
   const plotsSource = useVectorLayer(map, shownPlots);
   useVectorLayer(map, registration.draft, draftStyle);
   const details = usePlotDetails(map, plotsSource, shownPlots, mode === 'idle' || searching);
-  useDrawInteraction(map, drawShapeFor(mode), {
+  const draw = useDrawInteraction(map, drawShapeFor(mode), {
     onPolygon: interaction.plotDrawn,
     onCircle: interaction.circleDrawn,
+    snapTo: plotsSource,
   });
 
   function leaveFor(next: () => void) {
@@ -36,6 +39,33 @@ export function useMapPage() {
     registration.discard();
     next();
   }
+
+  const cancel = () => leaveFor(registration.cancel);
+
+  useKeyDown((event) => {
+    const action = shortcutFor(
+      {
+        key: event.key,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+        shiftKey: event.shiftKey,
+        typing: isTyping(event.target),
+      },
+      mode,
+      details.plot !== null,
+    );
+    if (!action) {
+      return;
+    }
+    event.preventDefault();
+    if (action === 'cancel') {
+      cancel();
+    } else if (action === 'undoLastPoint') {
+      draw.undoLastPoint();
+    } else {
+      details.close();
+    }
+  });
 
   return {
     mapTargetRef: targetRef,
@@ -45,9 +75,13 @@ export function useMapPage() {
     toolbar: {
       drawPlot: () => leaveFor(interaction.drawPlot),
       drawSearch: () => leaveFor(interaction.drawSearch),
-      cancel: () => leaveFor(registration.cancel),
+      cancel,
       disabled: registration.isSaving,
     },
+    drawing:
+      mode === 'drawingPlot' || mode === 'drawingSearch'
+        ? { canUndo: mode === 'drawingPlot', undoLastPoint: draw.undoLastPoint }
+        : null,
     plotForm: registration.form,
     searchPanel: search.panel && {
       ...search.panel,
