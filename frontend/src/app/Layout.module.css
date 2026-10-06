@@ -4,19 +4,6 @@
   height: 100%;
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  height: 48px;
-  padding: 0 16px;
-  border-bottom: 1px solid #d0d7de;
-}
-
-.title {
-  margin: 0;
-  font-size: 1.25rem;
-}
-
 .main {
   display: flex;
   flex: 1;
