@@ -59,6 +59,18 @@ class ApiErrorShapeTests {
         Arguments.of("search radius NaN", search("-22", "-47", "NaN"), 400),
         Arguments.of("search radius Infinity", search("-22", "-47", "Infinity"), 400),
         Arguments.of("search latitude NaN", search("NaN", "-47", "100"), 400),
+        Arguments.of(
+            "search with a negative price",
+            search("-22", "-47", "100").param("minPrice", "-1"),
+            400),
+        Arguments.of(
+            "search with a non-numeric area",
+            search("-22", "-47", "100").param("maxAreaSquareMeters", "abc"),
+            400),
+        Arguments.of(
+            "search with an infinite price",
+            search("-22", "-47", "100").param("maxPrice", "Infinity"),
+            400),
         Arguments.of("search parameter missing", get("/api/v1/plots/search?lat=-22&lng=-47"), 400),
         Arguments.of("bbox missing", get("/api/v1/plots"), 400),
         Arguments.of("bbox with three numbers", viewport("-47,-22,-46.9"), 400),

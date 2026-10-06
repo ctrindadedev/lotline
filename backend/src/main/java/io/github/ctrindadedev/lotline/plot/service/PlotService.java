@@ -48,8 +48,18 @@ public class PlotService {
   }
 
   @Transactional(readOnly = true)
-  public List<PlotDetails> searchWithinRadius(double lat, double lng, double radiusMeters) {
-    return plotRepository.findWithinRadius(lat, lng, radiusMeters).stream()
+  public List<PlotDetails> searchWithinRadius(
+      double lat, double lng, double radiusMeters, SearchFilters filters) {
+    return plotRepository
+        .findWithinRadius(
+            lat,
+            lng,
+            radiusMeters,
+            filters.minPrice(),
+            filters.maxPrice(),
+            filters.minAreaSquareMeters(),
+            filters.maxAreaSquareMeters())
+        .stream()
         .map(PlotDetails::from)
         .toList();
   }

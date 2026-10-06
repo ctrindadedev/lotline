@@ -1,5 +1,6 @@
 package io.github.ctrindadedev.lotline.plot.persistence;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import org.locationtech.jts.geom.Polygon;
@@ -21,6 +22,12 @@ public interface PlotRepository extends JpaRepository<Plot, UUID> {
       SELECT p.* FROM plots p
       WHERE ST_DWithin(CAST(p.boundary AS geography),
           CAST(ST_SetSRID(ST_MakePoint(:lng, :lat), 4326) AS geography), :radiusMeters)
+        AND (CAST(:minPrice AS numeric) IS NULL OR p.price >= CAST(:minPrice AS numeric))
+        AND (CAST(:maxPrice AS numeric) IS NULL OR p.price <= CAST(:maxPrice AS numeric))
+        AND (CAST(:minArea AS numeric) IS NULL
+          OR ST_Area(CAST(p.boundary AS geography)) >= CAST(:minArea AS numeric))
+        AND (CAST(:maxArea AS numeric) IS NULL
+          OR ST_Area(CAST(p.boundary AS geography)) <= CAST(:maxArea AS numeric))
       ORDER BY ST_Distance(CAST(p.boundary AS geography),
           CAST(ST_SetSRID(ST_MakePoint(:lng, :lat), 4326) AS geography)), p.id
       """;
@@ -54,7 +61,11 @@ public interface PlotRepository extends JpaRepository<Plot, UUID> {
   List<Plot> findWithinRadius(
       @Param("lat") double lat,
       @Param("lng") double lng,
-      @Param("radiusMeters") double radiusMeters);
+      @Param("radiusMeters") double radiusMeters,
+      @Param("minPrice") BigDecimal minPrice,
+      @Param("maxPrice") BigDecimal maxPrice,
+      @Param("minArea") BigDecimal minAreaSquareMeters,
+      @Param("maxArea") BigDecimal maxAreaSquareMeters);
 
   @Query(value = IN_BOUNDING_BOX_SQL, nativeQuery = true)
   List<Plot> findInBoundingBox(
