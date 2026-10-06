@@ -53,4 +53,12 @@ public class PlotService {
         .map(PlotDetails::from)
         .toList();
   }
+
+  @Transactional(readOnly = true)
+  public List<PlotDetails> listInBoundingBox(
+      double minLng, double minLat, double maxLng, double maxLat) {
+    return plotRepository.findInBoundingBox(minLng, minLat, maxLng, maxLat).stream()
+        .map(PlotDetails::from)
+        .toList();
+  }
 }

@@ -62,17 +62,25 @@ class PlotController {
     return toFeature(plotService.findById(id));
   }
 
+  @Operation(summary = "List the plots that intersect the map viewport")
+  @GetMapping
+  GeoJsonFeatureCollection<PlotProperties> listInBoundingBox(
+      @RequestParam @BoundingBox List<Double> bbox) {
+    return toFeatureCollection(
+        plotService.listInBoundingBox(bbox.get(0), bbox.get(1), bbox.get(2), bbox.get(3)));
+  }
+
   @Operation(summary = "Find plots that intersect a circle, closest first")
   @GetMapping("/search")
   GeoJsonFeatureCollection<PlotProperties> searchWithinRadius(
       @RequestParam @DecimalMin("-90") @DecimalMax("90") double lat,
       @RequestParam @DecimalMin("-180") @DecimalMax("180") double lng,
       @RequestParam @Positive @DecimalMax(MAX_RADIUS_METERS) double radiusMeters) {
-    List<GeoJsonFeature<PlotProperties>> features =
-        plotService.searchWithinRadius(lat, lng, radiusMeters).stream()
-            .map(this::toFeature)
-            .toList();
-    return new GeoJsonFeatureCollection<>(features);
+    return toFeatureCollection(plotService.searchWithinRadius(lat, lng, radiusMeters));
+  }
+
+  private GeoJsonFeatureCollection<PlotProperties> toFeatureCollection(List<PlotDetails> plots) {
+    return new GeoJsonFeatureCollection<>(plots.stream().map(this::toFeature).toList());
   }
 
   private GeoJsonFeature<PlotProperties> toFeature(PlotDetails plot) {

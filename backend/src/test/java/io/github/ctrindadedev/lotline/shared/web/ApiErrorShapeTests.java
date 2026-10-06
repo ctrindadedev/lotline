@@ -59,7 +59,13 @@ class ApiErrorShapeTests {
         Arguments.of("search radius NaN", search("-22", "-47", "NaN"), 400),
         Arguments.of("search radius Infinity", search("-22", "-47", "Infinity"), 400),
         Arguments.of("search latitude NaN", search("NaN", "-47", "100"), 400),
-        Arguments.of("search parameter missing", get("/api/v1/plots/search?lat=-22&lng=-47"), 400));
+        Arguments.of("search parameter missing", get("/api/v1/plots/search?lat=-22&lng=-47"), 400),
+        Arguments.of("bbox missing", get("/api/v1/plots"), 400),
+        Arguments.of("bbox with three numbers", viewport("-47,-22,-46.9"), 400),
+        Arguments.of("bbox with min above max", viewport("-46.9,-22,-47,-21.9"), 400),
+        Arguments.of("bbox latitude out of range", viewport("-47,-91,-46.9,-21.9"), 400),
+        Arguments.of("bbox not numeric", viewport("a,b,c,d"), 400),
+        Arguments.of("bbox with NaN", viewport("NaN,-22,-46.9,-21.9"), 400));
   }
 
   @ParameterizedTest(name = "{0} -> {2}")
@@ -103,6 +109,10 @@ class ApiErrorShapeTests {
         .param("lat", lat)
         .param("lng", lng)
         .param("radiusMeters", radius);
+  }
+
+  private static MockHttpServletRequestBuilder viewport(String bbox) {
+    return get("/api/v1/plots").param("bbox", bbox);
   }
 
   private static String plot(String boundary) {

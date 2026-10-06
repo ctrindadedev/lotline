@@ -9,6 +9,13 @@ import org.springframework.data.repository.query.Param;
 
 public interface PlotRepository extends JpaRepository<Plot, UUID> {
 
+  String IN_BOUNDING_BOX_SQL =
+      """
+      SELECT p.* FROM plots p
+      WHERE ST_Intersects(p.boundary, ST_MakeEnvelope(:minLng, :minLat, :maxLng, :maxLat, 4326))
+      ORDER BY p.id
+      """;
+
   String WITHIN_RADIUS_SQL =
       """
       SELECT p.* FROM plots p
@@ -48,4 +55,11 @@ public interface PlotRepository extends JpaRepository<Plot, UUID> {
       @Param("lat") double lat,
       @Param("lng") double lng,
       @Param("radiusMeters") double radiusMeters);
+
+  @Query(value = IN_BOUNDING_BOX_SQL, nativeQuery = true)
+  List<Plot> findInBoundingBox(
+      @Param("minLng") double minLng,
+      @Param("minLat") double minLat,
+      @Param("maxLng") double maxLng,
+      @Param("maxLat") double maxLat);
 }

@@ -31,6 +31,21 @@ class PlotRepositoryTests {
   @Autowired JdbcTemplate jdbcTemplate;
 
   @Test
+  void viewportListingCanUseTheGeometryIndex() {
+    jdbcTemplate.execute("SET LOCAL enable_seqscan = off");
+    String sql =
+        PlotRepository.IN_BOUNDING_BOX_SQL
+            .replace(":minLng", "-47.0")
+            .replace(":minLat", "-22.0")
+            .replace(":maxLng", "-46.98")
+            .replace(":maxLat", "-21.98");
+
+    List<Map<String, Object>> plan = jdbcTemplate.queryForList("EXPLAIN " + sql);
+
+    assertThat(plan.toString()).contains("plots_boundary_idx");
+  }
+
+  @Test
   void radiusSearchCanUseTheGeographyIndex() {
     // A tiny table is seq-scanned anyway; forbid it to see whether the index is usable at all
     jdbcTemplate.execute("SET LOCAL enable_seqscan = off");
