@@ -6,7 +6,7 @@ import { toOlFeatures, type GeoJsonFeatureCollection } from './geojson';
 import type Style from 'ol/style/Style';
 import { polygonStyle } from './styles';
 
-/** Shows a GeoJSON collection on its own layer; `undefined` leaves the layer empty. */
+/** Shows a GeoJSON collection on its own layer; `undefined` leaves the layer empty. Returns its source. */
 export function useVectorLayer(
   map: OlMap | null,
   collection: GeoJsonFeatureCollection<object> | undefined,
@@ -31,4 +31,6 @@ export function useVectorLayer(
       source.addFeatures(toOlFeatures(collection));
     }
   }, [source, collection]);
+
+  return source;
 }

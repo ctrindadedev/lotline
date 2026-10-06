@@ -19,8 +19,17 @@ const BOUNDARY: GeoJsonPolygon = {
 
 const VALUES = { price: '1000', description: 'A plot', contact: 'seller@example.com' };
 
-const { plotDrawn } = vi.hoisted(() => ({
+const { plotDrawn, closeDetails } = vi.hoisted(() => ({
   plotDrawn: { current: null as ((polygon: GeoJsonPolygon) => void) | null },
+  closeDetails: vi.fn<() => void>(),
+}));
+
+vi.mock('./usePlotDetails', () => ({
+  usePlotDetails: () => ({
+    plot: null,
+    overlayElement: document.createElement('div'),
+    close: closeDetails,
+  }),
 }));
 
 vi.mock('../../../shared/map/useDrawInteraction', () => ({
@@ -142,6 +151,16 @@ describe('useMapPage', () => {
     act(() => plotDrawn.current!(BOUNDARY));
     expect(result.current.plotForm!.alert).toBeNull();
     expect(result.current.plotForm!.form.getValues()).toEqual(VALUES);
+  });
+
+  it('closes the plot details when the user starts drawing', () => {
+    closeDetails.mockClear();
+    const { result } = renderHook(() => useMapPage(), { wrapper: createQueryWrapper() });
+
+    act(() => result.current.toolbar.drawPlot());
+    act(() => result.current.toolbar.drawSearch());
+
+    expect(closeDetails).toHaveBeenCalledTimes(2);
   });
 
   it('drops the drawn plot and the typed values on cancel or when switching to search', () => {

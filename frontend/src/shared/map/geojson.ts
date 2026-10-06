@@ -1,8 +1,9 @@
 import type Feature from 'ol/Feature';
-import { getCenter, getWidth, type Extent } from 'ol/extent';
+import { getCenter, type Extent } from 'ol/extent';
 import GeoJSON from 'ol/format/GeoJSON';
 import type Polygon from 'ol/geom/Polygon';
-import { get as getProjection, transformExtent } from 'ol/proj';
+import { transformExtent } from 'ol/proj';
+import { worldCopyOffset } from './worldCopies';
 
 /** `[longitude, latitude]` in degrees (EPSG:4326), the GeoJSON order. */
 export type Position = [lng: number, lat: number];
@@ -44,10 +45,8 @@ export function toGeoJsonPolygon(polygon: Polygon): GeoJsonPolygon {
   return format.writeGeometryObject(onMainWorld(polygon), { decimals: 7 }) as GeoJsonPolygon;
 }
 
-/** The map repeats the world sideways; a shape drawn on a copy is moved back onto the main one. */
 function onMainWorld(polygon: Polygon): Polygon {
-  const worldWidth = getWidth(getProjection(MAP_PROJECTION)!.getExtent());
-  const shift = Math.round(getCenter(polygon.getExtent())[0] / worldWidth) * worldWidth;
+  const shift = worldCopyOffset(getCenter(polygon.getExtent())[0]);
   if (shift === 0) {
     return polygon;
   }
