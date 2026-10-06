@@ -21,7 +21,8 @@ const BOUNDARY: GeoJsonPolygon = {
 
 const VALUES = { price: '1000', description: 'A plot', contact: 'seller@example.com' };
 
-const { plotDrawn, circleDrawn, closeDetails, detailsArgs } = vi.hoisted(() => ({
+const { plotDrawn, circleDrawn, closeDetails, detailsArgs, undoLastPoint } = vi.hoisted(() => ({
+  undoLastPoint: vi.fn<() => void>(),
   plotDrawn: { current: null as ((polygon: GeoJsonPolygon) => void) | null },
   circleDrawn: { current: null as ((circle: CircleArea) => void) | null },
   closeDetails: vi.fn<() => void>(),
@@ -47,6 +48,7 @@ vi.mock('../../../shared/map/useDrawInteraction', () => ({
   ) => {
     plotDrawn.current = handlers.onPolygon ?? null;
     circleDrawn.current = handlers.onCircle ?? null;
+    return { undoLastPoint };
   },
 }));
 
@@ -180,6 +182,41 @@ describe('useMapPage', () => {
     expect(result.current.mode).toBe('drawingSearch');
     expect(result.current.searchPanel).toBeNull();
     expect(detailsArgs.enabled).toBe(false);
+  });
+
+  it('leaves a drawing with Esc and removes the last corner with Ctrl+Z', () => {
+    undoLastPoint.mockClear();
+    const { result } = renderHook(() => useMapPage(), { wrapper: createQueryWrapper() });
+    act(() => result.current.toolbar.drawPlot());
+    expect(result.current.drawing).toEqual({ canUndo: true, undoLastPoint });
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true }));
+    });
+    expect(undoLastPoint).toHaveBeenCalledOnce();
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+    expect(result.current.mode).toBe('idle');
+    expect(result.current.drawing).toBeNull();
+  });
+
+  it('keeps a drawn plot and its form on Esc, and closes the details in idle', () => {
+    closeDetails.mockClear();
+    const { result } = renderPage();
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+    expect(result.current.mode).toBe('editingPlot');
+
+    act(() => result.current.plotForm!.cancel());
+    closeDetails.mockClear();
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+    expect(closeDetails).not.toHaveBeenCalled();
   });
 
   it('closes the plot details when the user starts drawing', () => {

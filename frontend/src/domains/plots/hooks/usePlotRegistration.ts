@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { messages } from '../../../shared/i18n/messages';
+import { polygonAreaSquareMeters } from '../../../shared/map/geodesy';
 import { polygonCollection } from '../../../shared/map/geojson';
 import {
   describeSaveError,
@@ -74,6 +75,7 @@ export function usePlotRegistration(interaction: Interaction) {
     form: boundary
       ? {
           form,
+          areaSquareMeters: polygonAreaSquareMeters(boundary),
           alert: describeSaveError(createPlot.error),
           isSaving: createPlot.isPending,
           submit,

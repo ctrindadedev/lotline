@@ -5,14 +5,21 @@ import Stack from '@mui/material/Stack';
 import TextField, { type TextFieldProps } from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import type { BaseSyntheticEvent } from 'react';
-import { Controller, type Control, type UseFormReturn } from 'react-hook-form';
+import { Controller, useWatch, type Control, type UseFormReturn } from 'react-hook-form';
+import { formatArea, formatPricePerSquareMeter } from '../../../shared/i18n/format';
 import { messages } from '../../../shared/i18n/messages';
-import type { PlotFormField, PlotFormValues, SaveErrorView } from '../utils/plotForm';
+import {
+  parsePrice,
+  type PlotFormField,
+  type PlotFormValues,
+  type SaveErrorView,
+} from '../utils/plotForm';
 
 const text = messages.plotForm;
 
 interface PlotFormProps {
   form: UseFormReturn<PlotFormValues>;
+  areaSquareMeters: number;
   alert: Pick<SaveErrorView, 'message' | 'detail'>;
   isSaving: boolean;
   onSubmit: (event?: BaseSyntheticEvent) => Promise<void>;
@@ -20,7 +27,18 @@ interface PlotFormProps {
   onCancel: () => void;
 }
 
-export function PlotForm({ form, alert, isSaving, onSubmit, onRedraw, onCancel }: PlotFormProps) {
+export function PlotForm({
+  form,
+  areaSquareMeters,
+  alert,
+  isSaving,
+  onSubmit,
+  onRedraw,
+  onCancel,
+}: PlotFormProps) {
+  const price = parsePrice(useWatch({ control: form.control, name: 'price' }));
+  const area = formatArea(areaSquareMeters);
+
   return (
     <Stack component="form" noValidate spacing={2} onSubmit={onSubmit} aria-label={text.label}>
       {alert.message && (
@@ -33,6 +51,14 @@ export function PlotForm({ form, alert, isSaving, onSubmit, onRedraw, onCancel }
           )}
         </Alert>
       )}
+      <Typography variant="body2" aria-live="polite">
+        {price === null
+          ? text.area(area)
+          : text.areaAndPricePerSquareMeter(
+              area,
+              formatPricePerSquareMeter(price, areaSquareMeters),
+            )}
+      </Typography>
       <FormTextField
         name="price"
         control={form.control}
@@ -58,7 +84,7 @@ export function PlotForm({ form, alert, isSaving, onSubmit, onRedraw, onCancel }
         required
         placeholder={text.contactPlaceholder}
       />
-      <Stack direction="row" spacing={1}>
+      <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap', whiteSpace: 'nowrap' }}>
         <Button type="submit" variant="contained" loading={isSaving}>
           {text.save}
         </Button>

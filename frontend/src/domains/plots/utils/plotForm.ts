@@ -30,11 +30,16 @@ function normalizePrice(price: string): string {
   return price.trim().replace(',', '.');
 }
 
+/** The price typed so far, or null while it is not a valid price. */
+export function parsePrice(value: string): number | null {
+  const price = normalizePrice(value);
+  return PRICE_PATTERN.test(price) && Number(price) > 0 ? Number(price) : null;
+}
+
 /** Mirrors the API's rules, so most mistakes are caught before the request. */
 export function validatePlotForm(values: PlotFormValues): PlotFieldErrors {
   const errors: PlotFieldErrors = {};
-  const price = normalizePrice(values.price);
-  if (!PRICE_PATTERN.test(price) || Number(price) <= 0) {
+  if (parsePrice(values.price) === null) {
     errors.price = text.errors.price;
   }
   if (!values.description.trim()) {

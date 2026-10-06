@@ -1,4 +1,6 @@
+import Button from '@mui/material/Button';
 import Snackbar from '@mui/material/Snackbar';
+import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { createPortal } from 'react-dom';
 import { messages } from '../../../shared/i18n/messages';
@@ -16,6 +18,7 @@ export function MapPage() {
     mode,
     hint,
     toolbar,
+    drawing,
     plotForm,
     searchPanel,
     details,
@@ -48,9 +51,22 @@ export function MapPage() {
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {hint}
         </Typography>
+        {drawing && (
+          <Stack spacing={1} sx={{ mb: 2, alignItems: 'flex-start' }}>
+            <Typography variant="caption" color="text.secondary">
+              {drawing.canUndo ? messages.drawing.plotShortcuts : messages.drawing.searchShortcuts}
+            </Typography>
+            {drawing.canUndo && (
+              <Button size="small" variant="outlined" onClick={drawing.undoLastPoint}>
+                {messages.drawing.undo}
+              </Button>
+            )}
+          </Stack>
+        )}
         {plotForm ? (
           <PlotForm
             form={plotForm.form}
+            areaSquareMeters={plotForm.areaSquareMeters}
             alert={plotForm.alert}
             isSaving={plotForm.isSaving}
             onSubmit={plotForm.submit}

@@ -28,6 +28,7 @@ function Harness({ alert = NO_ALERT, isSaving = false, onValid, expose, ...rest 
   return (
     <PlotForm
       form={form}
+      areaSquareMeters={1000}
       alert={alert}
       isSaving={isSaving}
       onSubmit={form.handleSubmit(onValid)}
@@ -111,6 +112,22 @@ describe('PlotForm', () => {
 
     expect(screen.queryByText('must be at most 1000')).not.toBeInTheDocument();
     expect(screen.getByText('is already in use')).toBeInTheDocument();
+  });
+
+  it('shows the area, and the price per m² once the price is valid', async () => {
+    renderForm();
+    const summary = screen.getByText(new RegExp(messages.plotForm.area('')));
+
+    expect(summary).toHaveTextContent(messages.plotForm.area('1.000 m²'));
+
+    await userEvent.type(
+      screen.getByRole('textbox', { name: new RegExp(messages.plotForm.price) }),
+      '150000',
+    );
+
+    expect(summary).toHaveTextContent(
+      messages.plotForm.areaAndPricePerSquareMeter('1.000 m²', 'R$ 150,00/m²'),
+    );
   });
 
   it('shows the alert it is given', () => {

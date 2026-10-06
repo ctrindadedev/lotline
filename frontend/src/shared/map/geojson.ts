@@ -3,6 +3,7 @@ import { getCenter, type Extent } from 'ol/extent';
 import GeoJSON from 'ol/format/GeoJSON';
 import type Polygon from 'ol/geom/Polygon';
 import { transformExtent } from 'ol/proj';
+import { snapRingsToEdges } from './edgeSnapping';
 import { worldCopyOffset } from './worldCopies';
 
 /** `[longitude, latitude]` in degrees (EPSG:4326), the GeoJSON order. */
@@ -40,9 +41,25 @@ export function toOlFeatures(collection: GeoJsonFeatureCollection<object>): Feat
   return format.readFeatures(collection);
 }
 
-/** Seven decimals of a degree is about 1 cm, finer than any hand-drawn vertex. */
-export function toGeoJsonPolygon(polygon: Polygon): GeoJsonPolygon {
-  return format.writeGeometryObject(onMainWorld(polygon), { decimals: 7 }) as GeoJsonPolygon;
+const DECIMALS = 7;
+
+/**
+ * A drawn polygon in degrees, with vertices that touch a neighbour's edge moved onto it, rounded
+ * to 7 decimals (about 1 cm, finer than any hand-drawn vertex).
+ */
+export function toGeoJsonPolygon(polygon: Polygon, neighbours: Polygon[] = []): GeoJsonPolygon {
+  const drawn = toDegrees(onMainWorld(polygon));
+  const snapped = snapRingsToEdges(drawn, neighbours.map(toDegrees));
+  return { type: 'Polygon', coordinates: snapped.map((ring) => ring.map(roundPosition)) };
+}
+
+function toDegrees(polygon: Polygon): Position[][] {
+  return (format.writeGeometryObject(polygon) as GeoJsonPolygon).coordinates;
+}
+
+function roundPosition([lng, lat]: Position): Position {
+  const factor = 10 ** DECIMALS;
+  return [Math.round(lng * factor) / factor, Math.round(lat * factor) / factor];
 }
 
 function onMainWorld(polygon: Polygon): Polygon {

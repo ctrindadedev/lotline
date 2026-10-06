@@ -24,9 +24,13 @@ describe('MapPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: messages.toolbar.listPlot }));
     expect(panel).toHaveTextContent(messages.hints.drawingPlot);
+    expect(panel).toHaveTextContent(messages.drawing.plotShortcuts);
+    await userEvent.click(screen.getByRole('button', { name: messages.drawing.undo }));
 
     await userEvent.click(screen.getByRole('button', { name: messages.toolbar.searchArea }));
     expect(panel).toHaveTextContent(messages.hints.drawingSearch);
+    expect(panel).toHaveTextContent(messages.drawing.searchShortcuts);
+    expect(screen.queryByRole('button', { name: messages.drawing.undo })).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: messages.toolbar.searchArea }));
     expect(panel).toHaveTextContent(messages.hints.idle);

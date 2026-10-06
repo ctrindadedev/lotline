@@ -27,6 +27,11 @@ export const messages = {
     editingPlot: 'Preencha os dados do terreno que você desenhou.',
     searching: 'Mostrando só os terrenos que alcançam o círculo. Refine com os filtros.',
   },
+  drawing: {
+    undo: 'Desfazer último ponto',
+    plotShortcuts: 'Atalhos: Esc cancela · Ctrl+Z desfaz o último ponto.',
+    searchShortcuts: 'Atalho: Esc cancela.',
+  },
   plotsInView: {
     mapLoading: 'Carregando o mapa…',
     zoomIn: 'Aproxime o mapa para ver os terrenos desta área.',
@@ -46,6 +51,9 @@ export const messages = {
     redraw: 'Redesenhar',
     cancel: 'Cancelar',
     saved: 'Terreno anunciado.',
+    area: (area: string) => `Área: ${area}`,
+    areaAndPricePerSquareMeter: (area: string, pricePerSquareMeter: string) =>
+      `Área: ${area} · ${pricePerSquareMeter}`,
     technicalDetail: (detail: string) => `Detalhe técnico: ${detail}`,
     errors: {
       price:
