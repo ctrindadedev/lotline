@@ -5,7 +5,8 @@ import Fill from 'ol/style/Fill';
 import Stroke from 'ol/style/Stroke';
 import Style, { createEditingStyle } from 'ol/style/Style';
 import Text from 'ol/style/Text';
-import { formatDistance, toCircleArea } from './geodesy';
+import { formatDistance } from '../i18n/format';
+import { toCircleArea } from './geodesy';
 
 export const polygonStyle = new Style({
   fill: new Fill({ color: 'rgb(31 111 235 / 20%)' }),

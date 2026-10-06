@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { PlotFeature } from '../types';
 import { PlotPopup } from './PlotPopup';
+import { messages } from '../../../shared/i18n/messages';
 
 const PLOT: PlotFeature = {
   type: 'Feature',
@@ -30,20 +31,20 @@ const PLOT: PlotFeature = {
 describe('PlotPopup', () => {
   it('shows the price, area, price per m², description, contact and listing date', () => {
     render(<PlotPopup plot={PLOT} onClose={() => {}} />);
-    const popup = screen.getByRole('dialog', { name: 'Plot details' });
+    const popup = screen.getByRole('dialog', { name: messages.popup.label });
 
-    expect(popup).toHaveTextContent('R$150,000.00');
-    expect(popup).toHaveTextContent('1.15 ha · R$13.08/m²');
+    expect(popup).toHaveTextContent('R$ 150.000,00');
+    expect(popup).toHaveTextContent('1,15 ha · R$ 13,08/m²');
     expect(popup).toHaveTextContent('Corner plot Near the park');
-    expect(popup).toHaveTextContent('Contact: +55 19 99999-0000');
-    expect(popup).toHaveTextContent('Listed on Oct 6, 2026');
+    expect(popup).toHaveTextContent(`${messages.popup.contact} +55 19 99999-0000`);
+    expect(popup).toHaveTextContent(messages.popup.listedOn('6 de out. de 2026'));
   });
 
   it('closes from its close button', async () => {
     const onClose = vi.fn<() => void>();
     render(<PlotPopup plot={PLOT} onClose={onClose} />);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await userEvent.click(screen.getByRole('button', { name: messages.popup.close }));
 
     expect(onClose).toHaveBeenCalledOnce();
   });

@@ -3,13 +3,17 @@ import Button from '@mui/material/Button';
 import InputAdornment from '@mui/material/InputAdornment';
 import Stack from '@mui/material/Stack';
 import TextField, { type TextFieldProps } from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 import type { BaseSyntheticEvent } from 'react';
 import { Controller, type Control, type UseFormReturn } from 'react-hook-form';
-import type { PlotFormField, PlotFormValues } from '../utils/plotForm';
+import { messages } from '../../../shared/i18n/messages';
+import type { PlotFormField, PlotFormValues, SaveErrorView } from '../utils/plotForm';
+
+const text = messages.plotForm;
 
 interface PlotFormProps {
   form: UseFormReturn<PlotFormValues>;
-  alert: string | null;
+  alert: Pick<SaveErrorView, 'message' | 'detail'>;
   isSaving: boolean;
   onSubmit: (event?: BaseSyntheticEvent) => Promise<void>;
   onRedraw: () => void;
@@ -18,12 +22,21 @@ interface PlotFormProps {
 
 export function PlotForm({ form, alert, isSaving, onSubmit, onRedraw, onCancel }: PlotFormProps) {
   return (
-    <Stack component="form" noValidate spacing={2} onSubmit={onSubmit} aria-label="New plot">
-      {alert && <Alert severity="error">{alert}</Alert>}
+    <Stack component="form" noValidate spacing={2} onSubmit={onSubmit} aria-label={text.label}>
+      {alert.message && (
+        <Alert severity="error">
+          {alert.message}
+          {alert.detail && (
+            <Typography variant="caption" component="p" sx={{ mt: 0.5, opacity: 0.8 }}>
+              {text.technicalDetail(alert.detail)}
+            </Typography>
+          )}
+        </Alert>
+      )}
       <FormTextField
         name="price"
         control={form.control}
-        label="Price"
+        label={text.price}
         required
         slotProps={{
           input: { startAdornment: <InputAdornment position="start">R$</InputAdornment> },
@@ -33,7 +46,7 @@ export function PlotForm({ form, alert, isSaving, onSubmit, onRedraw, onCancel }
       <FormTextField
         name="description"
         control={form.control}
-        label="Description"
+        label={text.description}
         required
         multiline
         minRows={3}
@@ -41,19 +54,19 @@ export function PlotForm({ form, alert, isSaving, onSubmit, onRedraw, onCancel }
       <FormTextField
         name="contact"
         control={form.control}
-        label="Contact"
+        label={text.contact}
         required
-        placeholder="Phone or email"
+        placeholder={text.contactPlaceholder}
       />
       <Stack direction="row" spacing={1}>
         <Button type="submit" variant="contained" loading={isSaving}>
-          Save plot
+          {text.save}
         </Button>
         <Button variant="outlined" onClick={onRedraw} disabled={isSaving}>
-          Redraw
+          {text.redraw}
         </Button>
         <Button onClick={onCancel} disabled={isSaving}>
-          Cancel
+          {text.cancel}
         </Button>
       </Stack>
     </Stack>

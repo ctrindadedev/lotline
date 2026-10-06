@@ -1,6 +1,7 @@
 import Snackbar from '@mui/material/Snackbar';
 import Typography from '@mui/material/Typography';
 import { createPortal } from 'react-dom';
+import { messages } from '../../../shared/i18n/messages';
 import { useMapPage } from '../hooks/useMapPage';
 import styles from './MapPage.module.css';
 import { MapToolbar } from './MapToolbar';
@@ -24,8 +25,8 @@ export function MapPage() {
 
   return (
     <div className={styles.page}>
-      <section className={styles.mapArea} aria-label="Map">
-        <div role="toolbar" aria-label="Map tools" className={styles.toolbar}>
+      <section className={styles.mapArea} aria-label={messages.map.region}>
+        <div role="toolbar" aria-label={messages.map.tools} className={styles.toolbar}>
           <MapToolbar
             mode={mode}
             onDrawPlot={toolbar.drawPlot}
@@ -36,9 +37,13 @@ export function MapPage() {
         </div>
         <div ref={mapTargetRef} className={styles.map} data-testid="map" />
       </section>
-      <aside className={styles.panel} aria-label="Plot panel">
+      <aside className={styles.panel} aria-label={messages.map.panel}>
         <Typography variant="h6" component="h2" gutterBottom>
-          {plotForm ? 'New plot' : searchPanel ? 'Search' : 'Plots'}
+          {plotForm
+            ? messages.panel.newPlot
+            : searchPanel
+              ? messages.panel.search
+              : messages.panel.plots}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {hint}

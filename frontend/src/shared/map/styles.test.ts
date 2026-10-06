@@ -12,7 +12,7 @@ describe('radiusLabelStyle', () => {
     const styles = radiusLabelStyle(new Feature(circle));
     const label = styles.at(-1)!;
 
-    expect(label.getText()?.getText()).toBe('1.8 km');
+    expect(label.getText()?.getText()).toBe('1,8 km');
     expect((label.getGeometry() as Point).getCoordinates()).toEqual(circle.getCenter());
   });
 

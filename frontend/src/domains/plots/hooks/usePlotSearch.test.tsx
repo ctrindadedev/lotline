@@ -5,6 +5,7 @@ import { createQueryWrapper } from '../../../test/queryClient';
 import type { InteractionState } from '../utils/interactionMode';
 import type { useInteractionMode } from './useInteractionMode';
 import { usePlotSearch } from './usePlotSearch';
+import { messages } from '../../../shared/i18n/messages';
 
 const AREA: CircleArea = { center: [-47.06, -22.9], radiusMeters: 1500 };
 const RESULTS = { type: 'FeatureCollection', features: [] };
@@ -33,15 +34,15 @@ describe('usePlotSearch', () => {
   it('searches the drawn circle and shows the area that was searched', async () => {
     const { result } = render({ mode: 'searching', area: AREA });
 
-    expect(result.current.panel!.status).toBe('Searching…');
+    expect(result.current.panel!.status).toBe(messages.search.searching);
     await waitFor(() => expect(result.current.results).toEqual(RESULTS));
     expect(fetchMock.mock.calls[0][0]).toBe(
       '/api/v1/plots/search?lng=-47.06&lat=-22.9&radiusMeters=1500',
     );
     expect(result.current.panel).toMatchObject({
-      radius: '1.5 km',
+      radius: '1,5 km',
       capped: false,
-      status: 'No plots reach into this circle.',
+      status: messages.search.none,
     });
     expect(result.current.circle!.features[0].geometry.type).toBe('Polygon');
   });
@@ -72,7 +73,7 @@ describe('usePlotSearch', () => {
   it('limits the radius to what the API accepts, and says so', async () => {
     const { result } = render({ mode: 'searching', area: { ...AREA, radiusMeters: 80_000 } });
 
-    expect(result.current.panel).toMatchObject({ radius: '50.0 km', capped: true });
+    expect(result.current.panel).toMatchObject({ radius: '50,0 km', capped: true });
     await waitFor(() => expect(fetchMock.mock.calls[0][0]).toContain('radiusMeters=50000'));
   });
 

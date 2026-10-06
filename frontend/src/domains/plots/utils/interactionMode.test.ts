@@ -9,6 +9,7 @@ import {
   type InteractionMode,
   type InteractionState,
 } from './interactionMode';
+import { messages } from '../../../shared/i18n/messages';
 
 const BOUNDARY: GeoJsonPolygon = {
   type: 'Polygon',
@@ -118,10 +119,10 @@ describe('toolbarModeFor', () => {
 
 describe('interactionHint', () => {
   it('tells the user what to do in each mode', () => {
-    expect(interactionHint('idle')).toMatch(/^Pan and zoom/);
-    expect(interactionHint('drawingPlot')).toMatch(/corners/);
-    expect(interactionHint('drawingSearch')).toMatch(/radius/);
-    expect(interactionHint('editingPlot')).toMatch(/details/);
-    expect(interactionHint('searching')).toMatch(/filters/);
+    expect(interactionHint('idle')).toBe(messages.hints.idle);
+    expect(interactionHint('drawingPlot')).toBe(messages.hints.drawingPlot);
+    expect(interactionHint('drawingSearch')).toBe(messages.hints.drawingSearch);
+    expect(interactionHint('editingPlot')).toBe(messages.hints.editingPlot);
+    expect(interactionHint('searching')).toBe(messages.hints.searching);
   });
 });

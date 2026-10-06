@@ -2,7 +2,7 @@ import Circle from 'ol/geom/Circle';
 import { fromLonLat } from 'ol/proj';
 import { getDistance } from 'ol/sphere';
 import { describe, expect, it } from 'vitest';
-import { formatDistance, geodesicCircle, polygonAreaSquareMeters, toCircleArea } from './geodesy';
+import { geodesicCircle, polygonAreaSquareMeters, toCircleArea } from './geodesy';
 
 const CAMPINAS = fromLonLat([-47.06, -22.9]);
 const WORLD_WIDTH = fromLonLat([180, 0])[0] * 2;
@@ -54,18 +54,5 @@ describe('geodesicCircle', () => {
     for (const point of ring) {
       expect(getDistance(center, point)).toBeCloseTo(1500, 0);
     }
-  });
-});
-
-describe('formatDistance', () => {
-  it.each([
-    [0, '0 m'],
-    [850.4, '850 m'],
-    [999.4, '999 m'],
-    [999.6, '1.0 km'],
-    [1234, '1.2 km'],
-    [50_000, '50.0 km'],
-  ])('formats %d m as %s', (meters, label) => {
-    expect(formatDistance(meters)).toBe(label);
   });
 });

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { PlotsInView } from '../hooks/usePlotsInView';
 import type { PlotFeature } from '../types';
 import { describePlotsInView } from './describePlotsInView';
+import { messages } from '../../../shared/i18n/messages';
 
 const READY: PlotsInView = {
   mapReady: true,
@@ -18,17 +19,17 @@ function withPlots(count: number): PlotsInView {
 
 describe('describePlotsInView', () => {
   it.each([
-    ['the map is not ready', { ...READY, mapReady: false }, 'Loading the map…'],
-    ['zoomed out', { ...READY, zoomedIn: false }, 'Zoom in to see the plots in this area.'],
+    ['the map is not ready', { ...READY, mapReady: false }, messages.plotsInView.mapLoading],
+    ['zoomed out', { ...READY, zoomedIn: false }, messages.plotsInView.zoomIn],
     [
       'the request failed',
       { ...READY, error: new Error('Request failed with status 503') },
-      'Could not load plots: Request failed with status 503',
+      messages.plotsInView.failed,
     ],
-    ['loading', { ...READY, isLoading: true }, 'Loading plots…'],
-    ['there are no plots', withPlots(0), 'No plots in this area yet.'],
-    ['there is one plot', withPlots(1), '1 plot in this area.'],
-    ['there are several plots', withPlots(3), '3 plots in this area.'],
+    ['loading', { ...READY, isLoading: true }, messages.plotsInView.loading],
+    ['there are no plots', withPlots(0), messages.plotsInView.none],
+    ['there is one plot', withPlots(1), messages.plotsInView.count(1)],
+    ['there are several plots', withPlots(3), messages.plotsInView.count(3)],
   ])('describes when %s', (_, state, message) => {
     expect(describePlotsInView(state)).toBe(message);
   });

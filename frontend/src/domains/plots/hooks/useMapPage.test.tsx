@@ -5,6 +5,7 @@ import type { GeoJsonPolygon } from '../../../shared/map/geojson';
 import { createQueryWrapper } from '../../../test/queryClient';
 import { EMPTY_PLOT_FORM } from '../utils/plotForm';
 import { useMapPage } from './useMapPage';
+import { messages } from '../../../shared/i18n/messages';
 
 const BOUNDARY: GeoJsonPolygon = {
   type: 'Polygon',
@@ -84,7 +85,7 @@ describe('useMapPage', () => {
 
     await waitFor(() => expect(result.current.mode).toBe('idle'));
     expect(result.current.plotForm).toBeNull();
-    expect(result.current.notice).toBe('Plot listed.');
+    expect(result.current.notice).toBe(messages.plotForm.saved);
     expect(JSON.parse(fetchMock.mock.calls[0][1]!.body as string)).toEqual({
       boundary: BOUNDARY,
       price: 1000,
@@ -116,7 +117,7 @@ describe('useMapPage', () => {
     act(() => result.current.toolbar.drawSearch());
     await act(async () => respond(Response.json({ id: 'new' }, { status: 201 })));
 
-    await waitFor(() => expect(result.current.notice).toBe('Plot listed.'));
+    await waitFor(() => expect(result.current.notice).toBe(messages.plotForm.saved));
     expect(result.current.mode).toBe('drawingSearch');
   });
 
@@ -134,10 +135,10 @@ describe('useMapPage', () => {
 
     await waitFor(() =>
       expect(result.current.plotForm!.form.getFieldState('price').error?.message).toBe(
-        'must be at most 1000',
+        messages.plotForm.errors.price,
       ),
     );
-    expect(result.current.plotForm!.alert).toBe('Check the highlighted fields.');
+    expect(result.current.plotForm!.alert.message).toBe(messages.plotForm.saveErrors.highlighted);
   });
 
   it('keeps the drawing, the error and the typed values through a redraw', async () => {
@@ -148,7 +149,9 @@ describe('useMapPage', () => {
 
     await fillAndSubmit(result);
 
-    await waitFor(() => expect(result.current.plotForm!.alert).toMatch(/overlaps/));
+    await waitFor(() =>
+      expect(result.current.plotForm!.alert.message).toBe(messages.plotForm.saveErrors.overlap),
+    );
     expect(result.current.mode).toBe('editingPlot');
 
     act(() => result.current.plotForm!.redraw());
@@ -156,7 +159,7 @@ describe('useMapPage', () => {
     expect(result.current.plotForm).toBeNull();
 
     act(() => plotDrawn.current!(BOUNDARY));
-    expect(result.current.plotForm!.alert).toBeNull();
+    expect(result.current.plotForm!.alert.message).toBeNull();
     expect(result.current.plotForm!.form.getValues()).toEqual(VALUES);
   });
 
@@ -169,7 +172,7 @@ describe('useMapPage', () => {
     act(() => circleDrawn.current!({ center: [-47.06, -22.9], radiusMeters: 1500 }));
 
     expect(result.current.mode).toBe('searching');
-    expect(result.current.searchPanel!.radius).toBe('1.5 km');
+    expect(result.current.searchPanel!.radius).toBe('1,5 km');
     await waitFor(() => expect(detailsArgs.plots).toEqual(results));
     expect(detailsArgs.enabled).toBe(true);
 
