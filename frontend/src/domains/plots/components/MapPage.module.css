@@ -53,6 +53,11 @@
   line-height: 1.5;
 }
 
+.status {
+  margin: 12px 0 0;
+  font-weight: 600;
+}
+
 @media (max-width: 720px) {
   .page {
     flex-direction: column;

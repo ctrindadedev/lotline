@@ -1,4 +1,11 @@
-import type { GeoJsonPolygon } from '../../shared/map/geojson';
+import type {
+  BoundingBox,
+  GeoJsonFeature,
+  GeoJsonFeatureCollection,
+  GeoJsonPolygon,
+} from '../../shared/map/geojson';
+
+export type { BoundingBox };
 
 export interface PlotProperties {
   price: number;
@@ -7,17 +14,9 @@ export interface PlotProperties {
   createdAt: string;
 }
 
-export interface PlotFeature {
-  type: 'Feature';
-  id: string;
-  geometry: GeoJsonPolygon;
-  properties: PlotProperties;
-}
+export type PlotFeature = GeoJsonFeature<PlotProperties>;
 
-export interface PlotFeatureCollection {
-  type: 'FeatureCollection';
-  features: PlotFeature[];
-}
+export type PlotFeatureCollection = GeoJsonFeatureCollection<PlotProperties>;
 
 export interface NewPlot {
   boundary: GeoJsonPolygon;
@@ -25,9 +24,6 @@ export interface NewPlot {
   description: string;
   contact: string;
 }
-
-/** `[minLng, minLat, maxLng, maxLat]` in degrees. */
-export type BoundingBox = [minLng: number, minLat: number, maxLng: number, maxLat: number];
 
 export type RadiusSearch = {
   lat: number;

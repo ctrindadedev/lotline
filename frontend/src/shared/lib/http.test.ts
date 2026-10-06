@@ -25,8 +25,13 @@ describe('getJson', () => {
   it('returns the parsed body of a successful response', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({ ok: 1 }));
 
-    await expect(getJson('/plots', { bbox: '1,2,3,4' })).resolves.toEqual({ ok: 1 });
-    expect(fetchMock).toHaveBeenCalledWith('/api/v1/plots?bbox=1%2C2%2C3%2C4', { method: 'GET' });
+    const signal = new AbortController().signal;
+
+    await expect(getJson('/plots', { bbox: '1,2,3,4' }, signal)).resolves.toEqual({ ok: 1 });
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/plots?bbox=1%2C2%2C3%2C4', {
+      method: 'GET',
+      signal,
+    });
   });
 
   it('turns a problem detail into an ApiError with its field errors', async () => {

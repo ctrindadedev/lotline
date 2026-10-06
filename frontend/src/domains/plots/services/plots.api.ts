@@ -7,8 +7,11 @@ import type {
   RadiusSearch,
 } from '../types';
 
-export function listPlotsInBoundingBox(bbox: BoundingBox): Promise<PlotFeatureCollection> {
-  return getJson('/plots', { bbox: bbox.join(',') });
+export function listPlotsInBoundingBox(
+  bbox: BoundingBox,
+  signal?: AbortSignal,
+): Promise<PlotFeatureCollection> {
+  return getJson('/plots', { bbox: bbox.join(',') }, signal);
 }
 
 export function searchPlots(search: RadiusSearch): Promise<PlotFeatureCollection> {
