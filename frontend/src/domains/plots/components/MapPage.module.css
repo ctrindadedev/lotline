@@ -21,17 +21,7 @@
   top: 12px;
   left: 50%;
   z-index: 1;
-  display: flex;
-  gap: 8px;
-  padding: 6px;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 25%);
   transform: translateX(-50%);
-}
-
-.toolbar:empty {
-  display: none;
 }
 
 .panel {
@@ -40,22 +30,6 @@
   overflow-y: auto;
   border-left: 1px solid #d0d7de;
   background: #f6f8fa;
-}
-
-.panelTitle {
-  margin: 0 0 8px;
-  font-size: 1.125rem;
-}
-
-.hint {
-  margin: 0;
-  color: #59636e;
-  line-height: 1.5;
-}
-
-.status {
-  margin: 12px 0 0;
-  font-weight: 600;
 }
 
 @media (max-width: 720px) {
