@@ -6,6 +6,7 @@ import { useVectorLayer } from '../../../shared/map/useVectorLayer';
 import { describePlotsInView } from '../utils/describePlotsInView';
 import { drawShapeFor, interactionHint } from '../utils/interactionMode';
 import { useInteractionMode } from './useInteractionMode';
+import { usePlotDetails } from './usePlotDetails';
 import { usePlotRegistration } from './usePlotRegistration';
 import { usePlotsInView } from './usePlotsInView';
 
@@ -17,8 +18,9 @@ export function useMapPage() {
   const registration = usePlotRegistration(interaction);
   const { mode } = interaction;
 
-  useVectorLayer(map, plotsInView.plots);
+  const plotsSource = useVectorLayer(map, plotsInView.plots);
   useVectorLayer(map, registration.draft, draftStyle);
+  const details = usePlotDetails(map, plotsSource, plotsInView.plots, mode === 'idle');
   useDrawInteraction(map, drawShapeFor(mode), { onPolygon: interaction.plotDrawn });
 
   return {
@@ -28,10 +30,12 @@ export function useMapPage() {
     hint: interactionHint(mode),
     toolbar: {
       drawPlot: () => {
+        details.close();
         registration.discard();
         interaction.drawPlot();
       },
       drawSearch: () => {
+        details.close();
         registration.discard();
         interaction.drawSearch();
       },
@@ -39,6 +43,11 @@ export function useMapPage() {
       disabled: registration.isSaving,
     },
     plotForm: registration.form,
+    details: {
+      plot: details.plot,
+      overlayElement: details.overlayElement,
+      close: details.close,
+    },
     notice: registration.notice,
     dismissNotice: registration.dismissNotice,
   };

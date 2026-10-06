@@ -1,13 +1,24 @@
 import Snackbar from '@mui/material/Snackbar';
 import Typography from '@mui/material/Typography';
+import { createPortal } from 'react-dom';
 import { useMapPage } from '../hooks/useMapPage';
 import styles from './MapPage.module.css';
 import { MapToolbar } from './MapToolbar';
 import { PlotForm } from './PlotForm';
+import { PlotPopup } from './PlotPopup';
 
 export function MapPage() {
-  const { mapTargetRef, plotsStatus, mode, hint, toolbar, plotForm, notice, dismissNotice } =
-    useMapPage();
+  const {
+    mapTargetRef,
+    plotsStatus,
+    mode,
+    hint,
+    toolbar,
+    plotForm,
+    details,
+    notice,
+    dismissNotice,
+  } = useMapPage();
 
   return (
     <div className={styles.page}>
@@ -45,6 +56,11 @@ export function MapPage() {
           </Typography>
         )}
       </aside>
+      {details.plot &&
+        createPortal(
+          <PlotPopup plot={details.plot} onClose={details.close} />,
+          details.overlayElement,
+        )}
       <Snackbar
         open={notice !== null}
         message={notice}
