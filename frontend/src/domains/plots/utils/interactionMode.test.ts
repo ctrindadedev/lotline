@@ -22,11 +22,14 @@ const BOUNDARY: GeoJsonPolygon = {
   ],
 };
 
+const AREA = { center: [-47.06, -22.9] as [number, number], radiusMeters: 1500 };
+
 const STATES: Record<InteractionMode, InteractionState> = {
   idle: { mode: 'idle' },
   drawingPlot: { mode: 'drawingPlot' },
   drawingSearch: { mode: 'drawingSearch' },
   editingPlot: { mode: 'editingPlot', boundary: BOUNDARY },
+  searching: { mode: 'searching', area: AREA },
 };
 
 const EVENTS: Record<InteractionEvent['type'], InteractionEvent> = {
@@ -35,6 +38,7 @@ const EVENTS: Record<InteractionEvent['type'], InteractionEvent> = {
   cancel: { type: 'cancel' },
   plotDrawn: { type: 'plotDrawn', boundary: BOUNDARY },
   plotSaved: { type: 'plotSaved' },
+  circleDrawn: { type: 'circleDrawn', area: AREA },
 };
 
 describe('nextInteractionState', () => {
@@ -50,6 +54,10 @@ describe('nextInteractionState', () => {
     ['editingPlot', 'drawSearch', 'drawingSearch'],
     ['editingPlot', 'cancel', 'idle'],
     ['editingPlot', 'plotSaved', 'idle'],
+    ['drawingSearch', 'circleDrawn', 'searching'],
+    ['searching', 'drawSearch', 'drawingSearch'],
+    ['searching', 'drawPlot', 'drawingPlot'],
+    ['searching', 'cancel', 'idle'],
   ])('%s + %s -> %s', (mode, event, expected) => {
     expect(nextInteractionState(STATES[mode], EVENTS[event]).mode).toBe(expected);
   });
@@ -63,8 +71,21 @@ describe('nextInteractionState', () => {
     ['drawingSearch', 'drawSearch'],
     ['drawingSearch', 'plotDrawn'],
     ['editingPlot', 'plotDrawn'],
+    ['editingPlot', 'circleDrawn'],
+    ['idle', 'circleDrawn'],
+    ['drawingPlot', 'circleDrawn'],
+    ['searching', 'circleDrawn'],
+    ['searching', 'plotDrawn'],
+    ['searching', 'plotSaved'],
   ])('ignores %s + %s', (mode, event) => {
     expect(nextInteractionState(STATES[mode], EVENTS[event])).toBe(STATES[mode]);
+  });
+
+  it('keeps the drawn circle while its results are shown', () => {
+    expect(nextInteractionState(STATES.drawingSearch, EVENTS.circleDrawn)).toEqual({
+      mode: 'searching',
+      area: AREA,
+    });
   });
 
   it('keeps the drawn boundary while the plot is being edited', () => {
@@ -81,6 +102,7 @@ describe('drawShapeFor', () => {
     expect(drawShapeFor('drawingSearch')).toBe('Circle');
     expect(drawShapeFor('idle')).toBeNull();
     expect(drawShapeFor('editingPlot')).toBeNull();
+    expect(drawShapeFor('searching')).toBeNull();
   });
 });
 
@@ -89,6 +111,7 @@ describe('toolbarModeFor', () => {
     expect(toolbarModeFor('drawingPlot')).toBe('drawingPlot');
     expect(toolbarModeFor('editingPlot')).toBe('drawingPlot');
     expect(toolbarModeFor('drawingSearch')).toBe('drawingSearch');
+    expect(toolbarModeFor('searching')).toBe('drawingSearch');
     expect(toolbarModeFor('idle')).toBeNull();
   });
 });
@@ -99,5 +122,6 @@ describe('interactionHint', () => {
     expect(interactionHint('drawingPlot')).toMatch(/corners/);
     expect(interactionHint('drawingSearch')).toMatch(/radius/);
     expect(interactionHint('editingPlot')).toMatch(/details/);
+    expect(interactionHint('searching')).toMatch(/filters/);
   });
 });

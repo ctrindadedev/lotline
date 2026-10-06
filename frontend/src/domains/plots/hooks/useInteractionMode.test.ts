@@ -40,4 +40,16 @@ describe('useInteractionMode', () => {
     act(() => result.current.plotSaved());
     expect(result.current.mode).toBe('idle');
   });
+
+  it('shows the results of a drawn circle until a new search', () => {
+    const { result } = renderHook(() => useInteractionMode());
+    const area = { center: [-47.06, -22.9] as [number, number], radiusMeters: 1500 };
+
+    act(() => result.current.drawSearch());
+    act(() => result.current.circleDrawn(area));
+    expect(result.current.state).toEqual({ mode: 'searching', area });
+
+    act(() => result.current.drawSearch());
+    expect(result.current.mode).toBe('drawingSearch');
+  });
 });

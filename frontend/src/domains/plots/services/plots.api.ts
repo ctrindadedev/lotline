@@ -14,8 +14,11 @@ export function listPlotsInBoundingBox(
   return getJson('/plots', { bbox: bbox.join(',') }, signal);
 }
 
-export function searchPlots(search: RadiusSearch): Promise<PlotFeatureCollection> {
-  return getJson('/plots/search', search);
+export function searchPlots(
+  search: RadiusSearch,
+  signal?: AbortSignal,
+): Promise<PlotFeatureCollection> {
+  return getJson('/plots/search', search, signal);
 }
 
 export function getPlot(id: string): Promise<PlotFeature> {

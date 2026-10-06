@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { CircleArea } from '../../../shared/map/geodesy';
 import type { GeoJsonPolygon } from '../../../shared/map/geojson';
 import { createQueryWrapper } from '../../../test/queryClient';
 import { EMPTY_PLOT_FORM } from '../utils/plotForm';
@@ -19,26 +20,32 @@ const BOUNDARY: GeoJsonPolygon = {
 
 const VALUES = { price: '1000', description: 'A plot', contact: 'seller@example.com' };
 
-const { plotDrawn, closeDetails } = vi.hoisted(() => ({
+const { plotDrawn, circleDrawn, closeDetails, detailsArgs } = vi.hoisted(() => ({
   plotDrawn: { current: null as ((polygon: GeoJsonPolygon) => void) | null },
+  circleDrawn: { current: null as ((circle: CircleArea) => void) | null },
   closeDetails: vi.fn<() => void>(),
+  detailsArgs: { plots: undefined as unknown, enabled: false },
 }));
 
 vi.mock('./usePlotDetails', () => ({
-  usePlotDetails: () => ({
-    plot: null,
-    overlayElement: document.createElement('div'),
-    close: closeDetails,
-  }),
+  usePlotDetails: (_map: unknown, _source: unknown, plots: unknown, enabled: boolean) => {
+    detailsArgs.plots = plots;
+    detailsArgs.enabled = enabled;
+    return { plot: null, overlayElement: document.createElement('div'), close: closeDetails };
+  },
 }));
 
 vi.mock('../../../shared/map/useDrawInteraction', () => ({
   useDrawInteraction: (
     _map: unknown,
     _shape: unknown,
-    handlers: { onPolygon?: (polygon: GeoJsonPolygon) => void },
+    handlers: {
+      onPolygon?: (polygon: GeoJsonPolygon) => void;
+      onCircle?: (circle: CircleArea) => void;
+    },
   ) => {
     plotDrawn.current = handlers.onPolygon ?? null;
+    circleDrawn.current = handlers.onCircle ?? null;
   },
 }));
 
@@ -151,6 +158,25 @@ describe('useMapPage', () => {
     act(() => plotDrawn.current!(BOUNDARY));
     expect(result.current.plotForm!.alert).toBeNull();
     expect(result.current.plotForm!.form.getValues()).toEqual(VALUES);
+  });
+
+  it('shows only the search results, clickable, while a circle is searched', async () => {
+    const results = { type: 'FeatureCollection', features: [] };
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async () => Response.json(results));
+    const { result } = renderHook(() => useMapPage(), { wrapper: createQueryWrapper() });
+
+    act(() => result.current.toolbar.drawSearch());
+    act(() => circleDrawn.current!({ center: [-47.06, -22.9], radiusMeters: 1500 }));
+
+    expect(result.current.mode).toBe('searching');
+    expect(result.current.searchPanel!.radius).toBe('1.5 km');
+    await waitFor(() => expect(detailsArgs.plots).toEqual(results));
+    expect(detailsArgs.enabled).toBe(true);
+
+    act(() => result.current.searchPanel!.newSearch());
+    expect(result.current.mode).toBe('drawingSearch');
+    expect(result.current.searchPanel).toBeNull();
+    expect(detailsArgs.enabled).toBe(false);
   });
 
   it('closes the plot details when the user starts drawing', () => {
