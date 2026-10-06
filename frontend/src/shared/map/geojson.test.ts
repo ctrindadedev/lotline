@@ -1,7 +1,13 @@
-import type { Polygon } from 'ol/geom';
+import Polygon from 'ol/geom/Polygon';
 import { fromLonLat } from 'ol/proj';
 import { describe, expect, it } from 'vitest';
-import { toBoundingBox, toOlFeatures, type GeoJsonFeatureCollection } from './geojson';
+import {
+  polygonCollection,
+  toBoundingBox,
+  toGeoJsonPolygon,
+  toOlFeatures,
+  type GeoJsonFeatureCollection,
+} from './geojson';
 
 const COLLECTION: GeoJsonFeatureCollection = {
   type: 'FeatureCollection',
@@ -66,5 +72,54 @@ describe('toBoundingBox', () => {
 
     expect(minLng).toBeCloseTo(-170);
     expect(maxLng).toBeCloseTo(-160);
+  });
+});
+
+describe('toGeoJsonPolygon', () => {
+  it('converts a drawn polygon back to degrees, rounded to 7 decimals', () => {
+    const ring = [
+      [-47.123456789, -22],
+      [-46.99, -22],
+      [-46.99, -21.99],
+      [-47.123456789, -22],
+    ];
+
+    expect(toGeoJsonPolygon(new Polygon([ring.map((c) => fromLonLat(c))]))).toEqual({
+      type: 'Polygon',
+      coordinates: [
+        [
+          [-47.1234568, -22],
+          [-46.99, -22],
+          [-46.99, -21.99],
+          [-47.1234568, -22],
+        ],
+      ],
+    });
+  });
+
+  it('moves a polygon drawn on the next copy of the world back onto the main one', () => {
+    const ring = [
+      [190, -22],
+      [190.01, -22],
+      [190.01, -21.99],
+      [190, -22],
+    ];
+    const drawn = new Polygon([ring.map((c) => fromLonLat(c))]);
+
+    const [converted] = toGeoJsonPolygon(drawn).coordinates;
+
+    expect(converted.map(([lng]) => lng)).toEqual([-170, -169.99, -169.99, -170]);
+    expect(drawn.getExtent()[0]).toBeCloseTo(fromLonLat([190, -22])[0]);
+  });
+});
+
+describe('polygonCollection', () => {
+  it('wraps one polygon as a feature collection', () => {
+    const polygon = COLLECTION.features[0].geometry;
+
+    expect(polygonCollection('draft', polygon)).toEqual({
+      type: 'FeatureCollection',
+      features: [{ type: 'Feature', id: 'draft', geometry: polygon, properties: {} }],
+    });
   });
 });

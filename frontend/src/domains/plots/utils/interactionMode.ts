@@ -1,24 +1,51 @@
+import type { GeoJsonPolygon } from '../../../shared/map/geojson';
 import type { DrawShape } from '../../../shared/map/useDrawInteraction';
 
-export type InteractionMode = 'idle' | 'drawingPlot' | 'drawingSearch';
+export type InteractionState =
+  | { mode: 'idle' }
+  | { mode: 'drawingPlot' }
+  | { mode: 'drawingSearch' }
+  | { mode: 'editingPlot'; boundary: GeoJsonPolygon };
 
-export type InteractionEvent = { type: 'drawPlot' } | { type: 'drawSearch' } | { type: 'cancel' };
+export type InteractionMode = InteractionState['mode'];
+
+export type InteractionEvent =
+  | { type: 'drawPlot' }
+  | { type: 'drawSearch' }
+  | { type: 'cancel' }
+  | { type: 'plotDrawn'; boundary: GeoJsonPolygon }
+  | { type: 'plotSaved' };
 
 const TRANSITIONS: Record<
   InteractionMode,
   Partial<Record<InteractionEvent['type'], InteractionMode>>
 > = {
   idle: { drawPlot: 'drawingPlot', drawSearch: 'drawingSearch' },
-  drawingPlot: { drawSearch: 'drawingSearch', cancel: 'idle' },
+  drawingPlot: { drawSearch: 'drawingSearch', cancel: 'idle', plotDrawn: 'editingPlot' },
   drawingSearch: { drawPlot: 'drawingPlot', cancel: 'idle' },
+  editingPlot: {
+    drawPlot: 'drawingPlot',
+    drawSearch: 'drawingSearch',
+    cancel: 'idle',
+    plotSaved: 'idle',
+  },
 };
 
-/** An event the current mode does not handle leaves the mode unchanged. */
-export function nextInteractionMode(
-  mode: InteractionMode,
+export const INITIAL_INTERACTION: InteractionState = { mode: 'idle' };
+
+/** An event the current mode does not handle leaves the state unchanged. */
+export function nextInteractionState(
+  state: InteractionState,
   event: InteractionEvent,
-): InteractionMode {
-  return TRANSITIONS[mode][event.type] ?? mode;
+): InteractionState {
+  const mode = TRANSITIONS[state.mode][event.type];
+  if (!mode) {
+    return state;
+  }
+  if (mode === 'editingPlot') {
+    return event.type === 'plotDrawn' ? { mode, boundary: event.boundary } : state;
+  }
+  return { mode };
 }
 
 export function drawShapeFor(mode: InteractionMode): DrawShape | null {
@@ -27,6 +54,20 @@ export function drawShapeFor(mode: InteractionMode): DrawShape | null {
       return 'Polygon';
     case 'drawingSearch':
       return 'Circle';
+    case 'idle':
+    case 'editingPlot':
+      return null;
+  }
+}
+
+/** The toolbar button shown as pressed: editing a plot still belongs to "List a plot". */
+export function toolbarModeFor(mode: InteractionMode): 'drawingPlot' | 'drawingSearch' | null {
+  switch (mode) {
+    case 'drawingPlot':
+    case 'editingPlot':
+      return 'drawingPlot';
+    case 'drawingSearch':
+      return 'drawingSearch';
     case 'idle':
       return null;
   }
@@ -38,6 +79,8 @@ export function interactionHint(mode: InteractionMode): string {
       return "Click on the map to place the plot's corners. Double-click to finish.";
     case 'drawingSearch':
       return 'Click the centre of the area, then click again to set the radius.';
+    case 'editingPlot':
+      return 'Fill in the details of the plot you drew.';
     case 'idle':
       return 'Pan and zoom the map to explore. Use the toolbar to list a plot or search an area.';
   }
