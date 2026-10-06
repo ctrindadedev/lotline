@@ -3,12 +3,15 @@ package io.github.ctrindadedev.lotline.plot.web;
 import io.github.ctrindadedev.lotline.plot.service.NewPlot;
 import io.github.ctrindadedev.lotline.plot.service.PlotDetails;
 import io.github.ctrindadedev.lotline.plot.service.PlotService;
+import io.github.ctrindadedev.lotline.plot.service.SearchFilters;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
@@ -70,13 +73,24 @@ class PlotController {
         plotService.listInBoundingBox(bbox.get(0), bbox.get(1), bbox.get(2), bbox.get(3)));
   }
 
-  @Operation(summary = "Find plots that intersect a circle, closest first")
+  @Operation(
+      summary = "Find plots that intersect a circle, closest first",
+      description = "Price and area bounds are optional and inclusive.")
   @GetMapping("/search")
   GeoJsonFeatureCollection<PlotProperties> searchWithinRadius(
       @RequestParam @DecimalMin("-90") @DecimalMax("90") double lat,
       @RequestParam @DecimalMin("-180") @DecimalMax("180") double lng,
-      @RequestParam @Positive @DecimalMax(MAX_RADIUS_METERS) double radiusMeters) {
-    return toFeatureCollection(plotService.searchWithinRadius(lat, lng, radiusMeters));
+      @RequestParam @Positive @DecimalMax(MAX_RADIUS_METERS) double radiusMeters,
+      @RequestParam(required = false) @PositiveOrZero BigDecimal minPrice,
+      @RequestParam(required = false) @PositiveOrZero BigDecimal maxPrice,
+      @RequestParam(required = false) @PositiveOrZero BigDecimal minAreaSquareMeters,
+      @RequestParam(required = false) @PositiveOrZero BigDecimal maxAreaSquareMeters) {
+    return toFeatureCollection(
+        plotService.searchWithinRadius(
+            lat,
+            lng,
+            radiusMeters,
+            new SearchFilters(minPrice, maxPrice, minAreaSquareMeters, maxAreaSquareMeters)));
   }
 
   private GeoJsonFeatureCollection<PlotProperties> toFeatureCollection(List<PlotDetails> plots) {

@@ -53,7 +53,11 @@ class PlotRepositoryTests {
         PlotRepository.WITHIN_RADIUS_SQL
             .replace(":lng", "-47.0")
             .replace(":lat", "-22.0")
-            .replace(":radiusMeters", "1000");
+            .replace(":radiusMeters", "1000")
+            .replace(":minPrice", "100")
+            .replace(":maxPrice", "NULL")
+            .replace(":minArea", "100")
+            .replace(":maxArea", "NULL");
 
     List<Map<String, Object>> plan = jdbcTemplate.queryForList("EXPLAIN " + sql);
 
