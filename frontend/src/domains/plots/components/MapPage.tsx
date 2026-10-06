@@ -2,7 +2,7 @@ import { useMapPage } from '../hooks/useMapPage';
 import styles from './MapPage.module.css';
 
 export function MapPage() {
-  const { mapTargetRef } = useMapPage();
+  const { mapTargetRef, plotsStatus } = useMapPage();
 
   return (
     <div className={styles.page}>
@@ -14,6 +14,9 @@ export function MapPage() {
         <h2 className={styles.panelTitle}>Plots</h2>
         <p className={styles.hint}>
           Pan and zoom the map to explore. Use the toolbar to list a plot or search an area.
+        </p>
+        <p role="status" className={styles.status}>
+          {plotsStatus}
         </p>
       </aside>
     </div>

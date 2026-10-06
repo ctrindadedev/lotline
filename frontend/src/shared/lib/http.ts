@@ -38,8 +38,8 @@ export function buildUrl(path: string, query: QueryParams = {}): string {
   return `${BASE_URL}${path}${search ? `?${search}` : ''}`;
 }
 
-export function getJson<T>(path: string, query?: QueryParams): Promise<T> {
-  return request<T>(buildUrl(path, query), { method: 'GET' });
+export function getJson<T>(path: string, query?: QueryParams, signal?: AbortSignal): Promise<T> {
+  return request<T>(buildUrl(path, query), { method: 'GET', signal });
 }
 
 export function postJson<T>(path: string, body: unknown): Promise<T> {
