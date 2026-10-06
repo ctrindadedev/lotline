@@ -1,12 +1,13 @@
-import styles from './App.module.css';
+import { MapPage } from '../domains/plots';
+import { Layout } from './Layout';
 import { Providers } from './providers';
 
 export function App() {
   return (
     <Providers>
-      <main className={styles.app}>
-        <h1 className={styles.title}>Lotline</h1>
-      </main>
+      <Layout>
+        <MapPage />
+      </Layout>
     </Providers>
   );
 }

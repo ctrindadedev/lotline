@@ -1,0 +1,95 @@
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import type { NewPlot, PlotFeature } from '../types';
+import { createPlot, getPlot, listPlotsInBoundingBox, searchPlots } from './plots.api';
+
+const PLOT: PlotFeature = {
+  type: 'Feature',
+  id: '0199a0a0-0000-7000-8000-000000000000',
+  geometry: {
+    type: 'Polygon',
+    coordinates: [
+      [
+        [-47, -22],
+        [-46.99, -22],
+        [-46.99, -21.99],
+        [-47, -22],
+      ],
+    ],
+  },
+  properties: {
+    price: 150000,
+    description: 'Corner plot',
+    contact: 'seller@example.com',
+    createdAt: '2026-10-06T12:00:00Z',
+  },
+};
+
+const EMPTY_COLLECTION = { type: 'FeatureCollection', features: [] };
+
+describe('plots API', () => {
+  let fetchMock: MockInstance<typeof fetch>;
+
+  beforeEach(() => {
+    fetchMock = vi.spyOn(globalThis, 'fetch');
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function respondWith(body: unknown, status = 200) {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+  }
+
+  function requestedUrl() {
+    return fetchMock.mock.calls[0][0];
+  }
+
+  it('lists the plots in a bounding box as one comma-separated parameter', async () => {
+    respondWith(EMPTY_COLLECTION);
+
+    await expect(listPlotsInBoundingBox([-47, -22, -46.9, -21.9])).resolves.toEqual(
+      EMPTY_COLLECTION,
+    );
+    expect(requestedUrl()).toBe('/api/v1/plots?bbox=-47%2C-22%2C-46.9%2C-21.9');
+  });
+
+  it('searches a radius sending only the filters that are set', async () => {
+    respondWith({ type: 'FeatureCollection', features: [PLOT] });
+
+    const result = await searchPlots({ lat: -22, lng: -47, radiusMeters: 1500, maxPrice: 200000 });
+
+    expect(result.features).toEqual([PLOT]);
+    expect(requestedUrl()).toBe(
+      '/api/v1/plots/search?lat=-22&lng=-47&radiusMeters=1500&maxPrice=200000',
+    );
+  });
+
+  it('fetches one plot by id', async () => {
+    respondWith(PLOT);
+
+    await expect(getPlot(PLOT.id)).resolves.toEqual(PLOT);
+    expect(requestedUrl()).toBe(`/api/v1/plots/${PLOT.id}`);
+  });
+
+  it('creates a plot with a POST', async () => {
+    respondWith(PLOT, 201);
+    const newPlot: NewPlot = {
+      boundary: PLOT.geometry,
+      price: 150000,
+      description: 'Corner plot',
+      contact: 'seller@example.com',
+    };
+
+    await expect(createPlot(newPlot)).resolves.toEqual(PLOT);
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/plots',
+      expect.objectContaining({ method: 'POST', body: JSON.stringify(newPlot) }),
+    );
+  });
+});
