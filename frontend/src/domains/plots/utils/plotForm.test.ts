@@ -20,9 +20,12 @@ describe('validatePlotForm', () => {
     expect(validatePlotForm({ ...VALID, price: ' 150000,5 ' })).toEqual({});
   });
 
-  it.each(['', '0', '-10', 'abc', '1.234', '1234567890123'])('rejects the price %j', (price) => {
-    expect(validatePlotForm({ ...VALID, price }).price).toBeDefined();
-  });
+  it.each(['', '0', '-10', 'abc', '1.234', '1234567890123', '200,000', '1.234,56'])(
+    'rejects the price %j',
+    (price) => {
+      expect(validatePlotForm({ ...VALID, price }).price).toBeDefined();
+    },
+  );
 
   it('requires a description and a contact within the API limits', () => {
     expect(validatePlotForm({ ...VALID, description: '  ', contact: '' })).toEqual({
@@ -52,7 +55,11 @@ describe('plotFormResolver', () => {
     expect(await plotFormResolver({ ...VALID, price: '0' }, undefined, options)).toEqual({
       values: {},
       errors: {
-        price: { type: 'validate', message: 'Enter a price above 0, with up to 2 decimals.' },
+        price: {
+          type: 'validate',
+          message:
+            'Enter a price above 0: digits only, up to 2 decimals (no thousands separators).',
+        },
       },
     });
   });

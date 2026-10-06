@@ -6,6 +6,7 @@ import Draw, { DrawEvent } from 'ol/interaction/Draw';
 import { fromLonLat } from 'ol/proj';
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import type { CircleArea } from './geodesy';
 import type { GeoJsonPolygon } from './geojson';
 import { useDrawInteraction, type DrawShape } from './useDrawInteraction';
 
@@ -101,5 +102,25 @@ describe('useDrawInteraction', () => {
     finishDrawing(map, new Feature(new Circle([0, 0], 100)));
 
     expect(onPolygon).not.toHaveBeenCalled();
+  });
+
+  it('hands over a finished circle in degrees and metres', () => {
+    const map = new OlMap({});
+    const onCircle = vi.fn<(circle: CircleArea) => void>();
+    renderHook(() => useDrawInteraction(map, 'Circle', { onCircle }));
+
+    finishDrawing(map, new Feature(new Circle(fromLonLat([-47.06, -22.9]), 1000)));
+
+    expect(onCircle).toHaveBeenCalledWith({ center: [-47.06, -22.9], radiusMeters: 920 });
+  });
+
+  it('ignores a circle without a radius, from a click without a drag', () => {
+    const map = new OlMap({});
+    const onCircle = vi.fn<(circle: CircleArea) => void>();
+    renderHook(() => useDrawInteraction(map, 'Circle', { onCircle }));
+
+    finishDrawing(map, new Feature(new Circle(fromLonLat([-47.06, -22.9]), 0)));
+
+    expect(onCircle).not.toHaveBeenCalled();
   });
 });

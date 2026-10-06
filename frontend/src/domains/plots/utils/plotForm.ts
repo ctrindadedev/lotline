@@ -27,7 +27,8 @@ export function validatePlotForm(values: PlotFormValues): PlotFieldErrors {
   const errors: PlotFieldErrors = {};
   const price = normalizePrice(values.price);
   if (!PRICE_PATTERN.test(price) || Number(price) <= 0) {
-    errors.price = 'Enter a price above 0, with up to 2 decimals.';
+    errors.price =
+      'Enter a price above 0: digits only, up to 2 decimals (no thousands separators).';
   }
   if (!values.description.trim()) {
     errors.description = 'Describe the plot.';

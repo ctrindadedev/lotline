@@ -1,3 +1,4 @@
+import type { CircleArea } from '../../../shared/map/geodesy';
 import type { GeoJsonPolygon } from '../../../shared/map/geojson';
 import type { DrawShape } from '../../../shared/map/useDrawInteraction';
 
@@ -5,7 +6,8 @@ export type InteractionState =
   | { mode: 'idle' }
   | { mode: 'drawingPlot' }
   | { mode: 'drawingSearch' }
-  | { mode: 'editingPlot'; boundary: GeoJsonPolygon };
+  | { mode: 'editingPlot'; boundary: GeoJsonPolygon }
+  | { mode: 'searching'; area: CircleArea };
 
 export type InteractionMode = InteractionState['mode'];
 
@@ -14,7 +16,8 @@ export type InteractionEvent =
   | { type: 'drawSearch' }
   | { type: 'cancel' }
   | { type: 'plotDrawn'; boundary: GeoJsonPolygon }
-  | { type: 'plotSaved' };
+  | { type: 'plotSaved' }
+  | { type: 'circleDrawn'; area: CircleArea };
 
 const TRANSITIONS: Record<
   InteractionMode,
@@ -22,13 +25,14 @@ const TRANSITIONS: Record<
 > = {
   idle: { drawPlot: 'drawingPlot', drawSearch: 'drawingSearch' },
   drawingPlot: { drawSearch: 'drawingSearch', cancel: 'idle', plotDrawn: 'editingPlot' },
-  drawingSearch: { drawPlot: 'drawingPlot', cancel: 'idle' },
+  drawingSearch: { drawPlot: 'drawingPlot', cancel: 'idle', circleDrawn: 'searching' },
   editingPlot: {
     drawPlot: 'drawingPlot',
     drawSearch: 'drawingSearch',
     cancel: 'idle',
     plotSaved: 'idle',
   },
+  searching: { drawPlot: 'drawingPlot', drawSearch: 'drawingSearch', cancel: 'idle' },
 };
 
 export const INITIAL_INTERACTION: InteractionState = { mode: 'idle' };
@@ -45,6 +49,9 @@ export function nextInteractionState(
   if (mode === 'editingPlot') {
     return event.type === 'plotDrawn' ? { mode, boundary: event.boundary } : state;
   }
+  if (mode === 'searching') {
+    return event.type === 'circleDrawn' ? { mode, area: event.area } : state;
+  }
   return { mode };
 }
 
@@ -56,6 +63,7 @@ export function drawShapeFor(mode: InteractionMode): DrawShape | null {
       return 'Circle';
     case 'idle':
     case 'editingPlot':
+    case 'searching':
       return null;
   }
 }
@@ -67,6 +75,7 @@ export function toolbarModeFor(mode: InteractionMode): 'drawingPlot' | 'drawingS
     case 'editingPlot':
       return 'drawingPlot';
     case 'drawingSearch':
+    case 'searching':
       return 'drawingSearch';
     case 'idle':
       return null;
@@ -81,6 +90,8 @@ export function interactionHint(mode: InteractionMode): string {
       return 'Click the centre of the area, then click again to set the radius.';
     case 'editingPlot':
       return 'Fill in the details of the plot you drew.';
+    case 'searching':
+      return 'Showing only the plots that reach into the circle. Narrow them with the filters.';
     case 'idle':
       return 'Pan and zoom the map to explore. Use the toolbar to list a plot or search an area.';
   }
