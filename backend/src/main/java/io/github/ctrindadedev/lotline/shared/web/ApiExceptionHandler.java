@@ -11,6 +11,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -87,6 +91,22 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
   @ExceptionHandler(ConflictException.class)
   ProblemDetail handleConflict(ConflictException ex) {
     return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+  }
+
+  @ExceptionHandler(AuthenticationException.class)
+  ProblemDetail handleUnauthenticated(AuthenticationException ex) {
+    String detail =
+        ex instanceof BadCredentialsException
+            ? "Email or password is incorrect"
+            : "Log in to do this";
+    return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, detail);
+  }
+
+  @ExceptionHandler(AccessDeniedException.class)
+  ProblemDetail handleForbidden(AccessDeniedException ex) {
+    String detail =
+        ex instanceof CsrfException ? "Missing or invalid CSRF token" : "You cannot do this";
+    return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, detail);
   }
 
   @ExceptionHandler(Exception.class)

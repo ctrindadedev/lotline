@@ -17,6 +17,12 @@ spring:
     hibernate:
       ddl-auto: validate
 
+server:
+  servlet:
+    session:
+      cookie:
+        same-site: lax
+
 management:
   endpoints:
     web:

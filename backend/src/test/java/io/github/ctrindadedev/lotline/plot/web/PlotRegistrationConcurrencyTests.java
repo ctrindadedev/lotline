@@ -1,5 +1,6 @@
 package io.github.ctrindadedev.lotline.plot.web;
 
+import static io.github.ctrindadedev.lotline.TestSecurity.loggedIn;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -84,7 +85,11 @@ class PlotRegistrationConcurrencyTests {
 
   private int register() throws Exception {
     return mockMvc
-        .perform(post("/api/v1/plots").contentType(MediaType.APPLICATION_JSON).content(BODY))
+        .perform(
+            post("/api/v1/plots")
+                .with(loggedIn())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(BODY))
         .andReturn()
         .getResponse()
         .getStatus();

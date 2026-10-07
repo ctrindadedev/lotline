@@ -70,6 +70,7 @@ export const messages = {
       rejected: 'O servidor recusou os dados do terreno.',
       overlap: 'Este terreno sobrepõe um terreno já anunciado. Redesenhe-o numa área livre.',
       invalidDrawing: 'O desenho não é um terreno válido. Confira se as bordas não se cruzam.',
+      sessionExpired: 'Sua sessão expirou. Entre novamente para salvar o terreno.',
       server: 'Não foi possível salvar o terreno. Tente novamente em instantes.',
       network: 'Não foi possível salvar o terreno. Confira sua conexão.',
     },
@@ -96,6 +97,43 @@ export const messages = {
     none: 'Nenhum terreno alcança este círculo.',
     count: (count: number) =>
       count === 1 ? '1 terreno alcança este círculo.' : `${count} terrenos alcançam este círculo.`,
+  },
+  auth: {
+    menu: {
+      greeting: (name: string) => `Olá, ${name}`,
+      logIn: 'Entrar',
+      register: 'Criar conta',
+      logOut: 'Sair',
+    },
+    logIn: {
+      title: 'Entrar',
+      reasonListPlot: 'Entre na sua conta para anunciar um terreno.',
+      submit: 'Entrar',
+      noAccount: 'Ainda não tem conta?',
+    },
+    register: {
+      title: 'Criar conta',
+      submit: 'Criar conta',
+      hasAccount: 'Já tem conta?',
+      passwordHint: 'Pelo menos 8 caracteres.',
+    },
+    fields: {
+      name: 'Nome',
+      email: 'E-mail',
+      password: 'Senha',
+    },
+    errors: {
+      nameRequired: 'Informe seu nome.',
+      nameTooLong: 'Use no máximo 100 caracteres.',
+      emailInvalid: 'Informe um e-mail válido.',
+      passwordRequired: 'Informe a senha.',
+      passwordTooShort: 'A senha precisa de pelo menos 8 caracteres.',
+      passwordTooLong: 'Senha longa demais. Use menos caracteres.',
+      badCredentials: 'E-mail ou senha incorretos.',
+      emailTaken: 'Já existe uma conta com este e-mail.',
+      server: 'Não foi possível concluir agora. Tente novamente em instantes.',
+      network: 'Não foi possível concluir. Confira sua conexão.',
+    },
   },
   searchFilters: {
     number: 'Use só números, com até 2 casas decimais (sem separador de milhar).',

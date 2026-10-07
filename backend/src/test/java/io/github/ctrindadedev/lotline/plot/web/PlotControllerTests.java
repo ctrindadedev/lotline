@@ -1,5 +1,6 @@
 package io.github.ctrindadedev.lotline.plot.web;
 
+import static io.github.ctrindadedev.lotline.TestSecurity.loggedIn;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.startsWith;
@@ -38,6 +39,7 @@ class PlotControllerTests {
         mockMvc
             .perform(
                 post("/api/v1/plots")
+                    .with(loggedIn())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body(SQUARE, "150000.00", "\"Corner plot\"", "\"+55 19 99999-0000\"")))
             .andExpect(status().isCreated())
@@ -65,6 +67,7 @@ class PlotControllerTests {
     mockMvc
         .perform(
             post("/api/v1/plots")
+                .with(loggedIn())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body("null", "-10", "\" \"", "null")))
         .andExpect(status().isBadRequest())
@@ -82,6 +85,7 @@ class PlotControllerTests {
     mockMvc
         .perform(
             post("/api/v1/plots")
+                .with(loggedIn())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body(BOWTIE, "1000", "\"Bowtie\"", "\"seller@example.com\"")))
         .andExpect(status().isUnprocessableContent())
@@ -92,11 +96,19 @@ class PlotControllerTests {
   void rejectsAnOverlappingPlotWith409() throws Exception {
     String request = body(SQUARE, "1000", "\"First\"", "\"seller@example.com\"");
     mockMvc
-        .perform(post("/api/v1/plots").contentType(MediaType.APPLICATION_JSON).content(request))
+        .perform(
+            post("/api/v1/plots")
+                .with(loggedIn())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(request))
         .andExpect(status().isCreated());
 
     mockMvc
-        .perform(post("/api/v1/plots").contentType(MediaType.APPLICATION_JSON).content(request))
+        .perform(
+            post("/api/v1/plots")
+                .with(loggedIn())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(request))
         .andExpect(status().isConflict())
         .andExpect(jsonPath("$.status").value(409))
         .andExpect(jsonPath("$.detail", startsWith("The boundary overlaps existing plots: ")));

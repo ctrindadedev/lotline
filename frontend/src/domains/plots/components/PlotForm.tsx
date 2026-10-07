@@ -2,18 +2,13 @@ import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import InputAdornment from '@mui/material/InputAdornment';
 import Stack from '@mui/material/Stack';
-import TextField, { type TextFieldProps } from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import type { BaseSyntheticEvent } from 'react';
-import { Controller, useWatch, type Control, type UseFormReturn } from 'react-hook-form';
+import { useWatch, type UseFormReturn } from 'react-hook-form';
+import { FormTextField } from '../../../shared/components/FormTextField';
 import { formatArea, formatPricePerSquareMeter } from '../../../shared/i18n/format';
 import { messages } from '../../../shared/i18n/messages';
-import {
-  parsePrice,
-  type PlotFormField,
-  type PlotFormValues,
-  type SaveErrorView,
-} from '../utils/plotForm';
+import { parsePrice, type PlotFormValues, type SaveErrorView } from '../utils/plotForm';
 
 const text = messages.plotForm;
 
@@ -96,28 +91,5 @@ export function PlotForm({
         </Button>
       </Stack>
     </Stack>
-  );
-}
-
-type FormTextFieldProps = Omit<TextFieldProps, 'name'> & {
-  name: PlotFormField;
-  control: Control<PlotFormValues>;
-};
-
-function FormTextField({ name, control, ...props }: FormTextFieldProps) {
-  return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field: { ref, ...field }, fieldState }) => (
-        <TextField
-          {...props}
-          {...field}
-          inputRef={ref}
-          error={Boolean(fieldState.error)}
-          helperText={fieldState.error?.message}
-        />
-      )}
-    />
   );
 }

@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router';
+import { useCurrentUser, type AuthRedirect } from '../../auth';
 import { isTyping, useKeyDown } from '../../../shared/hooks/useKeyDown';
 import { draftStyle, searchAreaStyle } from '../../../shared/map/styles';
 import { useDrawInteraction } from '../../../shared/map/useDrawInteraction';
@@ -18,6 +20,8 @@ export function useMapPage() {
   const viewport = useMapViewport(map);
   const plotsInView = usePlotsInView(viewport);
   const interaction = useInteractionMode();
+  const { user, isLoading: userLoading } = useCurrentUser();
+  const navigate = useNavigate();
   const registration = usePlotRegistration(interaction);
   const search = usePlotSearch(interaction);
   const { mode } = interaction;
@@ -73,7 +77,17 @@ export function useMapPage() {
     mode,
     hint: interactionHint(mode),
     toolbar: {
-      drawPlot: () => leaveFor(interaction.drawPlot),
+      drawPlot: () => {
+        if (userLoading) {
+          return;
+        }
+        if (!user) {
+          const redirect: AuthRedirect = { from: '/', reason: 'listPlot' };
+          navigate('/login', { state: redirect });
+          return;
+        }
+        leaveFor(interaction.drawPlot);
+      },
       drawSearch: () => leaveFor(interaction.drawSearch),
       cancel,
       disabled: registration.isSaving,
