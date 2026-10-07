@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useForgetUser } from '../../auth';
 import { messages } from '../../../shared/i18n/messages';
-import { ApiError } from '../../../shared/lib/http';
+import { ApiError, isSessionLost } from '../../../shared/lib/http';
 import { deletePlot, updatePlot } from '../services/plots.api';
 import type { PlotFeature } from '../types';
 import { describeManageError } from '../utils/manageErrors';
@@ -35,7 +35,7 @@ export function usePlotManagement(plot: PlotFeature | null) {
   }
 
   function onError(error: Error) {
-    if (error instanceof ApiError && error.status === 401) {
+    if (isSessionLost(error)) {
       forgetUser();
     } else if (error instanceof ApiError && error.status === 409) {
       return queryClient.invalidateQueries({ queryKey: plotKeys.all });

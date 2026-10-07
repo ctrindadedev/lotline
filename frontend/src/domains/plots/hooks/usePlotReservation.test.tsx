@@ -6,12 +6,15 @@ import type { PlotFeature, PlotProperties } from '../types';
 import { usePlotReservation } from './usePlotReservation';
 
 const { auth, navigate, forgetUser } = vi.hoisted(() => ({
-  auth: { user: { id: 'u1', name: 'Ana', email: 'ana@example.com' } as object | null },
+  auth: {
+    user: { id: 'u1', name: 'Ana', email: 'ana@example.com' } as object | null,
+    isLoading: false,
+  },
   navigate: vi.fn<(to: string, options?: object) => void>(),
   forgetUser: vi.fn<() => void>(),
 }));
 vi.mock('../../auth', () => ({
-  useCurrentUser: () => ({ user: auth.user, isLoading: false }),
+  useCurrentUser: () => ({ user: auth.user, isLoading: auth.isLoading }),
   useForgetUser: () => forgetUser,
 }));
 vi.mock('react-router', async (importOriginal) => ({
@@ -37,9 +40,9 @@ function plot(changes: Partial<PlotProperties> = {}): PlotFeature {
   };
 }
 
-function problem(status: number) {
+function problem(status: number, detail = 'x') {
   return Response.json(
-    { title: 'x', detail: 'x' },
+    { title: 'x', detail },
     { status, headers: { 'Content-Type': 'application/problem+json' } },
   );
 }
@@ -59,6 +62,7 @@ describe('usePlotReservation', () => {
     navigate.mockClear();
     forgetUser.mockClear();
     auth.user = { id: 'u1', name: 'Ana', email: 'ana@example.com' };
+    auth.isLoading = false;
   });
 
   it('reserves an available plot and refreshes the plots', async () => {
@@ -140,6 +144,28 @@ describe('usePlotReservation', () => {
 
     await waitFor(() => expect(forgetUser).toHaveBeenCalledOnce());
     expect(result.current.notice).toBe(messages.reservation.errors.sessionExpired);
+  });
+
+  it('forgets the user when another tab logged out and the CSRF token is gone', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(problem(403, 'Missing or invalid CSRF token'));
+    const { result } = render(plot());
+
+    act(() => result.current.actions[0].run());
+
+    await waitFor(() => expect(forgetUser).toHaveBeenCalledOnce());
+    expect(result.current.notice).toBe(messages.reservation.errors.sessionExpired);
+  });
+
+  it('waits for the session check before deciding where "Reservar" goes', () => {
+    auth.user = null;
+    auth.isLoading = true;
+    const fetchMock = vi.spyOn(globalThis, 'fetch');
+    const { result } = render(plot());
+
+    act(() => result.current.actions[0].run());
+
+    expect(navigate).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('offers nothing without a plot', () => {

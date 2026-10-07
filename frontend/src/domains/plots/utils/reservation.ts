@@ -1,5 +1,5 @@
 import { messages } from '../../../shared/i18n/messages';
-import { ApiError } from '../../../shared/lib/http';
+import { ApiError, isSessionLost } from '../../../shared/lib/http';
 import type { PlotProperties } from '../types';
 
 /** `cancel` is the buyer dropping their reservation, `release` the seller doing it. */
@@ -34,9 +34,10 @@ export function describeReservationError(error: Error): string {
   if (!(error instanceof ApiError)) {
     return errors.network;
   }
+  if (isSessionLost(error)) {
+    return errors.sessionExpired;
+  }
   switch (error.status) {
-    case 401:
-      return errors.sessionExpired;
     case 403:
       return errors.notAllowed;
     case 404:

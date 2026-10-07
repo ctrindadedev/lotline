@@ -24,9 +24,9 @@ const MINE: PlotFeature = {
   },
 };
 
-function problem(status: number) {
+function problem(status: number, detail = 'x') {
   return Response.json(
-    { title: 'x', detail: 'x' },
+    { title: 'x', detail },
     { status, headers: { 'Content-Type': 'application/problem+json' } },
   );
 }
@@ -108,6 +108,17 @@ describe('usePlotManagement', () => {
 
   it('forgets the user when the session expired', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(problem(401));
+    const { result } = render();
+
+    act(() => result.current.startDelete());
+    act(() => result.current.remove.confirm());
+
+    await waitFor(() => expect(forgetUser).toHaveBeenCalledOnce());
+    expect(result.current.remove.alert).toBe(messages.manage.errors.sessionExpired);
+  });
+
+  it('forgets the user when another tab logged out and the CSRF token is gone', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(problem(403, 'Missing or invalid CSRF token'));
     const { result } = render();
 
     act(() => result.current.startDelete());

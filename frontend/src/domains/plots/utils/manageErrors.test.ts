@@ -20,4 +20,10 @@ describe('describeManageError', () => {
     expect(describeManageError(null)).toBeNull();
     expect(describeManageError(new TypeError('Failed to fetch'))).toBe(errors.network);
   });
+
+  it('treats a refused CSRF token as an ended session', () => {
+    expect(
+      describeManageError(new ApiError(403, 'Forbidden', 'Missing or invalid CSRF token')),
+    ).toBe(errors.sessionExpired);
+  });
 });

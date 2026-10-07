@@ -22,10 +22,14 @@ function useSessionChange() {
   };
 }
 
-/** For a 401 elsewhere: the session is gone, so the app shows the visitor's options again. */
+/** For a session lost elsewhere: the app shows the visitor's options again. */
 export function useForgetUser() {
-  const onSessionChange = useSessionChange();
-  return () => onSessionChange(null);
+  const queryClient = useQueryClient();
+  return async () => {
+    queryClient.setQueryData(authKeys.me, null);
+    // Asking "me" again also brings a new CSRF cookie, if a logout in another tab cleared it.
+    await queryClient.invalidateQueries();
+  };
 }
 
 export function useLogIn() {
