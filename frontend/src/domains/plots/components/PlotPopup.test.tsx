@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import type { PlotFeature } from '../types';
 import { PlotPopup } from './PlotPopup';
@@ -62,5 +63,27 @@ describe('PlotPopup', () => {
 
     expect(onEdit).toHaveBeenCalledOnce();
     expect(onDelete).toHaveBeenCalledOnce();
+  });
+
+  it('asks visitors to log in to see the contact, and brings them back', async () => {
+    const { contact: _hidden, ...visible } = PLOT.properties;
+    function LoginSpy() {
+      return <p>{JSON.stringify(useLocation().state)}</p>;
+    }
+    render(
+      <MemoryRouter>
+        <Routes>
+          <Route
+            path="/"
+            element={<PlotPopup plot={{ ...PLOT, properties: visible }} onClose={() => {}} />}
+          />
+          <Route path="/login" element={<LoginSpy />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await userEvent.click(screen.getByRole('link', { name: messages.popup.contactHidden }));
+
+    expect(screen.getByText('{"from":"/","reason":"seeContact"}')).toBeInTheDocument();
   });
 });

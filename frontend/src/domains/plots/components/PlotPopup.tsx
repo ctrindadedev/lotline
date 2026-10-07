@@ -2,9 +2,11 @@ import CloseIcon from '@mui/icons-material/Close';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
+import Link from '@mui/material/Link';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { Link as RouterLink } from 'react-router';
 import {
   formatArea,
   formatDate,
@@ -13,9 +15,11 @@ import {
 } from '../../../shared/i18n/format';
 import { messages } from '../../../shared/i18n/messages';
 import { polygonAreaSquareMeters } from '../../../shared/map/geodesy';
+import type { AuthRedirect } from '../../auth';
 import type { PlotFeature } from '../types';
 
 const text = messages.popup;
+const SEE_CONTACT: AuthRedirect = { from: '/', reason: 'seeContact' };
 
 interface PlotPopupProps {
   plot: PlotFeature;
@@ -59,7 +63,12 @@ export function PlotPopup({ plot, onClose, onEdit, onDelete }: PlotPopupProps) {
         {description}
       </Typography>
       <Typography variant="body2">
-        <strong>{text.contact}</strong> {contact}
+        <strong>{text.contact}</strong>{' '}
+        {contact ?? (
+          <Link component={RouterLink} to="/login" state={SEE_CONTACT}>
+            {text.contactHidden}
+          </Link>
+        )}
       </Typography>
       <Typography variant="caption" color="text.secondary">
         {text.listedOn(formatDate(createdAt))}

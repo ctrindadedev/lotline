@@ -10,7 +10,8 @@ export type { BoundingBox };
 export interface PlotProperties {
   price: number;
   description: string;
-  contact: string;
+  /** Only sent to logged-in users. */
+  contact?: string;
   createdAt: string;
   ownedByMe: boolean;
 }

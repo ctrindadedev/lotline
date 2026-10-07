@@ -51,7 +51,7 @@ describe('login and registration', () => {
       );
     renderAt('/login', { from: '/', reason: 'listPlot' });
 
-    expect(screen.getByText(text.logIn.reasonListPlot)).toBeInTheDocument();
+    expect(screen.getByText(text.logIn.reasons.listPlot)).toBeInTheDocument();
     await userEvent.type(field(text.fields.email), 'ana@example.com');
     await userEvent.type(field(text.fields.password), 'secret123');
     await userEvent.click(screen.getByRole('button', { name: text.logIn.submit }));

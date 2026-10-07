@@ -65,7 +65,7 @@ class PlotControllerTests {
             .getHeader("Location");
 
     mockMvc
-        .perform(get(location))
+        .perform(get(location).with(loggedIn()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(location.substring(location.lastIndexOf('/') + 1)))
         .andExpect(jsonPath("$.properties.contact").value("+55 19 99999-0000"));
