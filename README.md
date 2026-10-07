@@ -12,7 +12,7 @@ Map-based marketplace for land plots: sellers draw a plot's exact boundary on an
 
 ### Architecture decisions
 
-<!-- Links to docs/adr/. -->
+The architecture overview, with diagrams of every view and the index of all decision records, is in [docs/architecture.md](docs/architecture.md). Each decision has its own record in [docs/adr/](docs/adr/).
 
 ## Running with Docker
 
