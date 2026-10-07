@@ -27,6 +27,19 @@ class PlotsSchemaTests {
 
   @Autowired JdbcTemplate jdbcTemplate;
 
+  @Test
+  void loadsTheSampleDataOnlyWithTheDemoContext() {
+    Integer seedRuns =
+        jdbcTemplate.queryForObject(
+            "SELECT count(*) FROM databasechangelog WHERE id = 'seed-demo-plots'", Integer.class);
+    Integer schemaRuns =
+        jdbcTemplate.queryForObject(
+            "SELECT count(*) FROM databasechangelog WHERE id = 'create-plots'", Integer.class);
+
+    assertThat(schemaRuns).isOne();
+    assertThat(seedRuns).isZero();
+  }
+
   // A missing index breaks no functional test, it only makes queries slow: guard it here
   @Test
   void boundaryHasASpatialIndex() {
