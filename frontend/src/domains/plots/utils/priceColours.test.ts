@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { PlotFeature, PlotProperties } from '../types';
 import {
+  legendRange,
   positionInRange,
   priceLook,
   pricePerSquareMeter,
@@ -84,5 +85,18 @@ describe('price colours', () => {
       dashed: false,
     });
     expect(priceLook({ ...PROPERTIES, ownedByMe: true }, 1, null, false).dashed).toBe(true);
+  });
+
+  it('takes the range of the legend from the summary in view, from the plots in a search', () => {
+    const measured = { min: 1, max: 9 };
+    const summary = { minPricePerSquareMeter: 1.01, maxPricePerSquareMeter: 9.02 };
+
+    expect(legendRange('view', measured, summary)).toEqual({ min: 1.01, max: 9.02 });
+    expect(legendRange('view', measured, null)).toBe(measured);
+    expect(
+      legendRange('view', measured, { minPricePerSquareMeter: null, maxPricePerSquareMeter: null }),
+    ).toBeNull();
+    expect(legendRange('search', measured, summary)).toBe(measured);
+    expect(legendRange('zoomedOut', measured, summary)).toBeNull();
   });
 });

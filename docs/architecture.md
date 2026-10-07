@@ -92,18 +92,19 @@ flowchart TB
 
 **API** (base `/api/v1`, OpenAPI at `/swagger-ui.html`):
 
-| Method and path                                                                                      | Who                      | Purpose                                                        |
-| ---------------------------------------------------------------------------------------------------- | ------------------------ | -------------------------------------------------------------- |
-| `GET /plots?bbox=minLng,minLat,maxLng,maxLat`                                                        | anyone                   | Plots that intersect the map viewport (ADR 0011)               |
-| `GET /plots/search?lat&lng&radiusMeters[&minPrice&maxPrice&minAreaSquareMeters&maxAreaSquareMeters]` | anyone                   | Plots that reach into a circle, closest first (ADR 0010, 0012) |
-| `GET /plots/{id}`                                                                                    | anyone                   | One plot                                                       |
-| `GET /plots/mine`                                                                                    | logged in                | The user's listings and reservations, newest first             |
-| `POST /plots`                                                                                        | logged in                | List a plot; the user becomes its owner (ADR 0019)             |
-| `PUT /plots/{id}`, `DELETE /plots/{id}`                                                              | owner, while available   | Change price, description, contact; remove                     |
-| `POST /plots/{id}/reservation`                                                                       | logged in, not the owner | Reserve (ADR 0021)                                             |
-| `DELETE /plots/{id}/reservation`                                                                     | owner or buyer           | Release the reservation                                        |
-| `POST /plots/{id}/sale`                                                                              | owner                    | Confirm the sale of a reserved plot                            |
-| `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`                       | —                        | Session authentication (ADR 0018)                              |
+| Method and path                                                                                      | Who                      | Purpose                                                                                                     |
+| ---------------------------------------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `GET /plots?bbox=minLng,minLat,maxLng,maxLat`                                                        | anyone                   | Plots that intersect the map viewport (ADR 0011)                                                            |
+| `GET /plots/summary?bbox=minLng,minLat,maxLng,maxLat`                                                | anyone                   | Count per status, total area and min / median / max price per m² of the plots in view, in one PostGIS query |
+| `GET /plots/search?lat&lng&radiusMeters[&minPrice&maxPrice&minAreaSquareMeters&maxAreaSquareMeters]` | anyone                   | Plots that reach into a circle, closest first (ADR 0010, 0012)                                              |
+| `GET /plots/{id}`                                                                                    | anyone                   | One plot                                                                                                    |
+| `GET /plots/mine`                                                                                    | logged in                | The user's listings and reservations, newest first                                                          |
+| `POST /plots`                                                                                        | logged in                | List a plot; the user becomes its owner (ADR 0019)                                                          |
+| `PUT /plots/{id}`, `DELETE /plots/{id}`                                                              | owner, while available   | Change price, description, contact; remove                                                                  |
+| `POST /plots/{id}/reservation`                                                                       | logged in, not the owner | Reserve (ADR 0021)                                                                                          |
+| `DELETE /plots/{id}/reservation`                                                                     | owner or buyer           | Release the reservation                                                                                     |
+| `POST /plots/{id}/sale`                                                                              | owner                    | Confirm the sale of a reserved plot                                                                         |
+| `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`                       | —                        | Session authentication (ADR 0018)                                                                           |
 
 Plot responses are GeoJSON `Feature` / `FeatureCollection` with `[lng, lat]` coordinates. The seller's contact is sent to logged-in users only (ADR 0020); `ownedByMe` and `reservedByMe` describe the plot from the point of view of the user asking.
 
@@ -133,7 +134,8 @@ flowchart TB
 
 - **By domain**, like the backend's modules. Each domain exports its public API from `index.ts`; another domain imports only from there.
 - **One orchestrating hook per page.** `MapPage` renders what `useMapPage` returns; `useMapPage` only composes feature hooks.
-- **The side panel lists plots as cards**: the plots in view for everyone, plus the user's listings and reservations once logged in. The tab is a URL parameter (`?panel=mine`), so the account menu links to it. Picking a card fits the map to the plot and opens its details; the selected plot is a flag on the OpenLayers feature that the layer's style reads.
+- **The side panel lists plots as cards**: the plots in view for everyone, plus the user's listings and reservations once logged in. The tab is a URL parameter (`?panel=mine`), so the account menu links to it. Picking a card fits the map to the plot and opens its details; the selected plot is a flag on the OpenLayers feature that the layer's style reads. Above the plots in view, a summary card shows the figures of `GET /plots/summary`.
+- **The map can be coloured by status or by price per m².** Price colours come from a sequential ramp on a logarithmic scale fitted to the plots in view: prices per m² of rural and urban land differ by orders of magnitude, and a linear scale would paint most plots alike. The ramp and the scale are pure functions.
 - **Server state in TanStack Query** over a small typed `fetch` client. Mutations invalidate the plot queries; logging in or out refetches everything that depends on the user.
 - **OpenLayers stays in `shared/map`.** Projection EPSG:3857 on the map, EPSG:4326 in data, converted only at the GeoJSON boundary; distances and areas are geodesic (`ol/sphere`).
 - MUI for components, CSS Modules for page layout (ADR 0013); react-hook-form with plain validation functions (ADR 0015); all user-facing text in one Brazilian Portuguese catalog (ADR 0016).

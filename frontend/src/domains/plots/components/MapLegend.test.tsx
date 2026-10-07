@@ -2,14 +2,25 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { messages } from '../../../shared/i18n/messages';
-import type { ColourBy } from '../utils/priceColours';
+import type { ColourBy, PriceScope } from '../utils/priceColours';
 import { MapLegend } from './MapLegend';
 
 const text = messages.legend;
 
-function renderLegend(colourBy: ColourBy, priceRange: { min: number; max: number } | null = null) {
+function renderLegend(
+  colourBy: ColourBy,
+  priceRange: { min: number; max: number } | null = null,
+  priceScope: PriceScope = 'view',
+) {
   const onColourBy = vi.fn<(mode: ColourBy) => void>();
-  render(<MapLegend colourBy={colourBy} onColourBy={onColourBy} priceRange={priceRange} />);
+  render(
+    <MapLegend
+      colourBy={colourBy}
+      onColourBy={onColourBy}
+      priceRange={priceRange}
+      priceScope={priceScope}
+    />,
+  );
   return { onColourBy, legend: screen.getByRole('list', { name: text.label }) };
 }
 
@@ -36,13 +47,29 @@ describe('MapLegend', () => {
 
     expect(legend).toHaveTextContent('0,50/m²');
     expect(legend).toHaveTextContent('32,92/m²');
-    expect(legend).toHaveTextContent(text.logScale);
+    expect(legend).toHaveTextContent(text.logScale.view);
     expect(legend).not.toHaveTextContent(messages.popup.status.SOLD);
   });
 
-  it('says when there is no price to scale', () => {
-    const { legend } = renderLegend('price');
+  it.each([
+    ['view', text.noPrices.view],
+    ['search', text.noPrices.search],
+    ['zoomedOut', text.noPrices.zoomedOut],
+  ] as const)('says why there is no price to scale (%s)', (scope, message) => {
+    const { legend } = renderLegend('price', null, scope);
 
-    expect(legend).toHaveTextContent(text.noPrices);
+    expect(legend).toHaveTextContent(message);
+  });
+
+  it('asks to zoom in even with a range left from before', () => {
+    const { legend } = renderLegend('price', { min: 1, max: 2 }, 'zoomedOut');
+
+    expect(legend).toHaveTextContent(text.noPrices.zoomedOut);
+  });
+
+  it('says the scale describes the search results during a search', () => {
+    const { legend } = renderLegend('price', { min: 1, max: 2 }, 'search');
+
+    expect(legend).toHaveTextContent(text.logScale.search);
   });
 });

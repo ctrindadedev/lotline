@@ -125,6 +125,12 @@ public class PlotService {
   }
 
   @Transactional(readOnly = true)
+  public PlotSummary summarizeBoundingBox(
+      double minLng, double minLat, double maxLng, double maxLat) {
+    return PlotSummary.from(plotRepository.summarizeBoundingBox(minLng, minLat, maxLng, maxLat));
+  }
+
+  @Transactional(readOnly = true)
   public List<PlotDetails> listInBoundingBox(
       double minLng, double minLat, double maxLng, double maxLat) {
     return plotRepository.findInBoundingBox(minLng, minLat, maxLng, maxLat).stream()

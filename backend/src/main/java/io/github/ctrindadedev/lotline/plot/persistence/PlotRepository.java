@@ -41,6 +41,33 @@ public interface PlotRepository extends JpaRepository<Plot, UUID> {
   @Query("SELECT p FROM Plot p WHERE p.id = :id")
   Optional<Plot> findByIdForUpdate(@Param("id") UUID id);
 
+  // Quoted aliases: PostgreSQL lower-cases the others and the projection would not find them.
+  @Query(
+      value =
+          """
+          WITH p AS (
+            SELECT status, price / ST_Area(CAST(boundary AS geography)) AS price_per_m2,
+                ST_Area(CAST(boundary AS geography)) AS area
+            FROM plots
+            WHERE ST_Intersects(boundary, ST_MakeEnvelope(:minLng, :minLat, :maxLng, :maxLat, 4326))
+          )
+          SELECT count(*) FILTER (WHERE status = 'AVAILABLE') AS "available",
+              count(*) FILTER (WHERE status = 'RESERVED') AS "reserved",
+              count(*) FILTER (WHERE status = 'SOLD') AS "sold",
+              COALESCE(sum(area), 0) AS "totalArea",
+              min(price_per_m2) AS "minPricePerSquareMeter",
+              percentile_cont(0.5) WITHIN GROUP (ORDER BY price_per_m2)
+                  AS "medianPricePerSquareMeter",
+              max(price_per_m2) AS "maxPricePerSquareMeter"
+          FROM p
+          """,
+      nativeQuery = true)
+  PlotSummaryView summarizeBoundingBox(
+      @Param("minLng") double minLng,
+      @Param("minLat") double minLat,
+      @Param("maxLng") double maxLng,
+      @Param("maxLat") double maxLat);
+
   @Query(value = "SELECT ST_Area(CAST(:boundary AS geography))", nativeQuery = true)
   double areaInSquareMeters(@Param("boundary") Polygon boundary);
 

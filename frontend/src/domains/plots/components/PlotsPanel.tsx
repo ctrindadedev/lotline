@@ -3,7 +3,8 @@ import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
 import { messages } from '../../../shared/i18n/messages';
 import type { PanelTab } from '../hooks/usePlotsPanel';
-import type { PlotFeature } from '../types';
+import type { PlotFeature, PlotsSummary } from '../types';
+import { AreaSummary } from './AreaSummary';
 import { PlotList } from './PlotList';
 
 const text = messages.plotsPanel;
@@ -14,6 +15,7 @@ interface PlotsPanelProps {
   onSelectTab: (tab: PanelTab) => void;
   plots: PlotFeature[];
   areaStatus: string;
+  areaSummary?: PlotsSummary | null;
   myPlotsLoading: boolean;
   myPlotsFailed: boolean;
   selectedId: string | null;
@@ -39,6 +41,7 @@ export function PlotsPanel({
   onSelectTab,
   plots,
   areaStatus,
+  areaSummary = null,
   myPlotsLoading,
   myPlotsFailed,
   selectedId,
@@ -75,6 +78,7 @@ export function PlotsPanel({
           ))}
         </Tabs>
       )}
+      {tab === 'area' && areaSummary && <AreaSummary summary={areaSummary} />}
       {status && (
         <Typography role="status" variant="subtitle2" sx={{ mb: 1.5 }}>
           {status}

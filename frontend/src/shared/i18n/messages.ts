@@ -41,13 +41,30 @@ export const messages = {
     noneListed: 'Você ainda não anunciou terrenos. Use "Anunciar terreno" no mapa.',
     noneReserved: 'Você ainda não reservou terrenos.',
   },
+  summary: {
+    label: 'Resumo da área',
+    statuses: (available: number, reserved: number, sold: number) =>
+      `${available} disponíveis · ${reserved} reservados · ${sold} vendidos`,
+    totalArea: 'Área total',
+    pricePerSquareMeter: 'Preço por m²',
+    min: 'mín.',
+    median: 'mediana',
+    max: 'máx.',
+  },
   legend: {
     label: 'Legenda',
     mine: 'Seu anúncio',
     colourBy: 'Colorir por',
     modes: { status: 'Status', price: 'Preço/m²' },
-    logScale: 'escala logarítmica, terrenos na tela',
-    noPrices: 'Nenhum terreno na tela.',
+    logScale: {
+      view: 'escala logarítmica, terrenos na tela',
+      search: 'escala logarítmica, resultados da busca',
+    },
+    noPrices: {
+      view: 'Nenhum terreno na tela.',
+      search: 'Nenhum resultado na busca.',
+      zoomedOut: 'Aproxime o mapa para ver os preços.',
+    },
   },
   plotsInView: {
     mapLoading: 'Carregando o mapa…',

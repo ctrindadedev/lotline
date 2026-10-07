@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { messages } from '../../../shared/i18n/messages';
 import type { PanelTab } from '../hooks/usePlotsPanel';
-import type { PlotFeature } from '../types';
+import type { PlotFeature, PlotsSummary } from '../types';
 import { PlotsPanel } from './PlotsPanel';
 
 const text = messages.plotsPanel;
@@ -37,7 +37,12 @@ const PLOT: PlotFeature = {
 function renderPanel(
   tab: PanelTab,
   plots: PlotFeature[],
-  extra: Partial<{ loading: boolean; failed: boolean; tabs: PanelTab[] }> = {},
+  extra: Partial<{
+    loading: boolean;
+    failed: boolean;
+    tabs: PanelTab[];
+    summary: PlotsSummary;
+  }> = {},
 ) {
   const onSelectTab = vi.fn<(tab: PanelTab) => void>();
   const onSelectPlot = vi.fn<(plot: PlotFeature) => void>();
@@ -48,6 +53,7 @@ function renderPanel(
       onSelectTab={onSelectTab}
       plots={plots}
       areaStatus="1 terreno nesta área."
+      areaSummary={extra.summary}
       myPlotsLoading={extra.loading ?? false}
       myPlotsFailed={extra.failed ?? false}
       selectedId={null}
@@ -108,5 +114,34 @@ describe('PlotsPanel', () => {
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(screen.getByRole('list', { name: text.list })).toBeInTheDocument();
+  });
+
+  it('summarises the area above the plots in view only', () => {
+    const summary: PlotsSummary = {
+      available: 1,
+      reserved: 0,
+      sold: 0,
+      totalAreaSquareMeters: 1000,
+      minPricePerSquareMeter: 1,
+      medianPricePerSquareMeter: 1,
+      maxPricePerSquareMeter: 1,
+    };
+    renderPanel('area', [PLOT], { summary });
+    expect(screen.getByRole('region', { name: messages.summary.label })).toBeInTheDocument();
+  });
+
+  it('does not summarise the area on the tabs of the user', () => {
+    renderPanel('mine', [PLOT], {
+      summary: {
+        available: 1,
+        reserved: 0,
+        sold: 0,
+        totalAreaSquareMeters: 1000,
+        minPricePerSquareMeter: 1,
+        medianPricePerSquareMeter: 1,
+        maxPricePerSquareMeter: 1,
+      },
+    });
+    expect(screen.queryByRole('region', { name: messages.summary.label })).not.toBeInTheDocument();
   });
 });

@@ -10,6 +10,7 @@ import {
   reservePlot,
   searchPlots,
   sellPlot,
+  summarizePlotsInBoundingBox,
   updatePlot,
 } from './plots.api';
 
@@ -146,5 +147,16 @@ describe('plots API', () => {
 
     await expect(listMyPlots()).resolves.toEqual({ type: 'FeatureCollection', features: [PLOT] });
     expect(fetchMock.mock.calls[0][0]).toBe('/api/v1/plots/mine');
+  });
+
+  it('summarises the plots in a bounding box', async () => {
+    respondWith({ available: 1 });
+
+    await expect(summarizePlotsInBoundingBox([-47, -23, -46, -22])).resolves.toEqual({
+      available: 1,
+    });
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      `/api/v1/plots/summary?bbox=${encodeURIComponent('-47,-23,-46,-22')}`,
+    );
   });
 });

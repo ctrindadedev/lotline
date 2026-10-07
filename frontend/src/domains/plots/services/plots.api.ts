@@ -5,6 +5,7 @@ import type {
   PlotChanges,
   PlotFeature,
   PlotFeatureCollection,
+  PlotsSummary,
   RadiusSearch,
 } from '../types';
 
@@ -13,6 +14,13 @@ export function listPlotsInBoundingBox(
   signal?: AbortSignal,
 ): Promise<PlotFeatureCollection> {
   return getJson('/plots', { bbox: bbox.join(',') }, signal);
+}
+
+export function summarizePlotsInBoundingBox(
+  bbox: BoundingBox,
+  signal?: AbortSignal,
+): Promise<PlotsSummary> {
+  return getJson('/plots/summary', { bbox: bbox.join(',') }, signal);
 }
 
 export function searchPlots(

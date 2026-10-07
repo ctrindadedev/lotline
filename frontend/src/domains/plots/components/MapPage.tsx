@@ -54,6 +54,7 @@ export function MapPage() {
             colourBy={legend.colourBy}
             onColourBy={legend.setColourBy}
             priceRange={legend.priceRange}
+            priceScope={legend.priceScope}
           />
         </div>
       </section>
@@ -114,6 +115,7 @@ export function MapPage() {
             onSelectTab={plotsPanel.selectTab}
             plots={plotsPanel.plots}
             areaStatus={plotsStatus}
+            areaSummary={plotsPanel.areaSummary}
             myPlotsLoading={plotsPanel.myPlotsLoading}
             myPlotsFailed={plotsPanel.myPlotsFailed}
             selectedId={details.selectedId}
