@@ -128,7 +128,7 @@ class PlotOverlapTests {
   private UUID create(Polygon boundary) {
     PlotDetails plot =
         plotService.create(
-            new NewPlot(boundary, new BigDecimal("1000"), "A plot", "seller@example.com"));
+            new NewPlot(boundary, new BigDecimal("1000"), "A plot", "seller@example.com", null));
     assertThat(plot.id()).isNotNull();
     return plot.id();
   }

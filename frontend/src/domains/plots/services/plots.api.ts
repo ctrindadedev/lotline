@@ -1,7 +1,8 @@
-import { getJson, postJson } from '../../../shared/lib/http';
+import { deleteJson, getJson, postJson, putJson } from '../../../shared/lib/http';
 import type {
   BoundingBox,
   NewPlot,
+  PlotChanges,
   PlotFeature,
   PlotFeatureCollection,
   RadiusSearch,
@@ -27,4 +28,12 @@ export function getPlot(id: string): Promise<PlotFeature> {
 
 export function createPlot(plot: NewPlot): Promise<PlotFeature> {
   return postJson('/plots', plot);
+}
+
+export function updatePlot(id: string, changes: PlotChanges): Promise<PlotFeature> {
+  return putJson(`/plots/${encodeURIComponent(id)}`, changes);
+}
+
+export function deletePlot(id: string): Promise<void> {
+  return deleteJson(`/plots/${encodeURIComponent(id)}`);
 }

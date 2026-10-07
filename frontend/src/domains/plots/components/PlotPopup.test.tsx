@@ -25,6 +25,7 @@ const PLOT: PlotFeature = {
     description: 'Corner plot\nNear the park',
     contact: '+55 19 99999-0000',
     createdAt: '2026-10-06T15:00:00Z',
+    ownedByMe: false,
   },
 };
 
@@ -47,5 +48,19 @@ describe('PlotPopup', () => {
     await userEvent.click(screen.getByRole('button', { name: messages.popup.close }));
 
     expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('offers to edit or delete only when given the owner actions', async () => {
+    const onEdit = vi.fn<() => void>();
+    const onDelete = vi.fn<() => void>();
+    const { rerender } = render(<PlotPopup plot={PLOT} onClose={() => {}} />);
+    expect(screen.queryByRole('button', { name: messages.popup.edit })).not.toBeInTheDocument();
+
+    rerender(<PlotPopup plot={PLOT} onClose={() => {}} onEdit={onEdit} onDelete={onDelete} />);
+    await userEvent.click(screen.getByRole('button', { name: messages.popup.edit }));
+    await userEvent.click(screen.getByRole('button', { name: messages.popup.delete }));
+
+    expect(onEdit).toHaveBeenCalledOnce();
+    expect(onDelete).toHaveBeenCalledOnce();
   });
 });

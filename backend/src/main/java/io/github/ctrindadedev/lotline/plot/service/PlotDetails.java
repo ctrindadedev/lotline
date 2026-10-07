@@ -13,6 +13,7 @@ public record PlotDetails(
     BigDecimal price,
     String description,
     String contact,
+    UUID ownerId,
     Instant createdAt) {
 
   static PlotDetails from(Plot plot) {
@@ -22,6 +23,7 @@ public record PlotDetails(
         plot.getPrice(),
         plot.getDescription(),
         plot.getContact(),
+        plot.getOwnerId(),
         plot.getCreatedAt());
   }
 }

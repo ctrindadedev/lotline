@@ -116,7 +116,8 @@ class PlotSearchFilterTests {
   private String save(String wkt, String price) {
     UUID id =
         plotRepository
-            .saveAndFlush(new Plot(polygon(wkt), new BigDecimal(price), "A plot", "seller@x.com"))
+            .saveAndFlush(
+                new Plot(polygon(wkt), new BigDecimal(price), "A plot", "seller@x.com", null))
             .getId();
     return id.toString();
   }

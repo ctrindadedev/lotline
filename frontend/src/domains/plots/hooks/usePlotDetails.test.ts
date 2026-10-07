@@ -21,7 +21,13 @@ const PLOT: PlotFeature = {
   type: 'Feature',
   id: 'plot-1',
   geometry: { type: 'Polygon', coordinates: [CORNERS] },
-  properties: { price: 1000, description: 'A plot', contact: 'a@b.c', createdAt: '2026-10-06' },
+  properties: {
+    price: 1000,
+    description: 'A plot',
+    contact: 'a@b.c',
+    createdAt: '2026-10-06',
+    ownedByMe: false,
+  },
 };
 
 const LOADED: PlotFeatureCollection = { type: 'FeatureCollection', features: [PLOT] };

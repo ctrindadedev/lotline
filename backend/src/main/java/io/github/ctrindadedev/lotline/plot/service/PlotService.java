@@ -1,6 +1,7 @@
 package io.github.ctrindadedev.lotline.plot.service;
 
 import io.github.ctrindadedev.lotline.plot.exception.PlotNotFoundException;
+import io.github.ctrindadedev.lotline.plot.exception.PlotNotOwnedException;
 import io.github.ctrindadedev.lotline.plot.exception.PlotOverlapException;
 import io.github.ctrindadedev.lotline.plot.persistence.Plot;
 import io.github.ctrindadedev.lotline.plot.persistence.PlotRepository;
@@ -35,8 +36,32 @@ public class PlotService {
     Plot plot =
         plotRepository.saveAndFlush(
             new Plot(
-                newPlot.boundary(), newPlot.price(), newPlot.description(), newPlot.contact()));
+                newPlot.boundary(),
+                newPlot.price(),
+                newPlot.description(),
+                newPlot.contact(),
+                newPlot.ownerId()));
     return PlotDetails.from(plot);
+  }
+
+  @Transactional
+  public PlotDetails update(UUID id, PlotChanges changes, UUID requesterId) {
+    Plot plot = findOwned(id, requesterId);
+    plot.changeDetails(changes.price(), changes.description(), changes.contact());
+    return PlotDetails.from(plotRepository.saveAndFlush(plot));
+  }
+
+  @Transactional
+  public void delete(UUID id, UUID requesterId) {
+    plotRepository.delete(findOwned(id, requesterId));
+  }
+
+  private Plot findOwned(UUID id, UUID requesterId) {
+    Plot plot = plotRepository.findById(id).orElseThrow(() -> new PlotNotFoundException(id));
+    if (!plot.isOwnedBy(requesterId)) {
+      throw new PlotNotOwnedException();
+    }
+    return plot;
   }
 
   @Transactional(readOnly = true)

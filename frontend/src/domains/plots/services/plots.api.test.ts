@@ -1,6 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import type { NewPlot, PlotFeature } from '../types';
-import { createPlot, getPlot, listPlotsInBoundingBox, searchPlots } from './plots.api';
+import {
+  createPlot,
+  deletePlot,
+  getPlot,
+  listPlotsInBoundingBox,
+  searchPlots,
+  updatePlot,
+} from './plots.api';
 
 const PLOT: PlotFeature = {
   type: 'Feature',
@@ -21,6 +28,7 @@ const PLOT: PlotFeature = {
     description: 'Corner plot',
     contact: 'seller@example.com',
     createdAt: '2026-10-06T12:00:00Z',
+    ownedByMe: false,
   },
 };
 
@@ -91,5 +99,20 @@ describe('plots API', () => {
       '/api/v1/plots',
       expect.objectContaining({ method: 'POST', body: JSON.stringify(newPlot) }),
     );
+  });
+
+  it('changes a plot with a PUT and removes it with a DELETE', async () => {
+    respondWith(PLOT);
+    const changes = { price: 1, description: 'New', contact: 'x@example.com' };
+
+    await expect(updatePlot(PLOT.id, changes)).resolves.toEqual(PLOT);
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/v1/plots/${PLOT.id}`,
+      expect.objectContaining({ method: 'PUT', body: JSON.stringify(changes) }),
+    );
+
+    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+    await expect(deletePlot(PLOT.id)).resolves.toBeUndefined();
+    expect(fetchMock.mock.calls[1][1]).toMatchObject({ method: 'DELETE' });
   });
 });

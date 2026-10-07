@@ -88,7 +88,7 @@ class PlotViewportTests {
   private UUID save(String wkt) {
     return plotRepository
         .saveAndFlush(
-            new Plot(polygon(wkt), new BigDecimal("1000"), "A plot", "seller@example.com"))
+            new Plot(polygon(wkt), new BigDecimal("1000"), "A plot", "seller@example.com", null))
         .getId();
   }
 }

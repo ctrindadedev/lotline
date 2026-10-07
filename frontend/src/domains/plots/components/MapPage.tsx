@@ -7,6 +7,8 @@ import { messages } from '../../../shared/i18n/messages';
 import { useMapPage } from '../hooks/useMapPage';
 import styles from './MapPage.module.css';
 import { MapToolbar } from './MapToolbar';
+import { DeletePlotDialog } from './DeletePlotDialog';
+import { EditPlotDialog } from './EditPlotDialog';
 import { PlotForm } from './PlotForm';
 import { PlotPopup } from './PlotPopup';
 import { SearchPanel } from './SearchPanel';
@@ -22,6 +24,7 @@ export function MapPage() {
     plotForm,
     searchPanel,
     details,
+    management,
     notice,
     dismissNotice,
   } = useMapPage();
@@ -91,9 +94,29 @@ export function MapPage() {
       </aside>
       {details.plot &&
         createPortal(
-          <PlotPopup plot={details.plot} onClose={details.close} />,
+          <PlotPopup
+            plot={details.plot}
+            onClose={details.close}
+            onEdit={management.canManage ? management.startEdit : undefined}
+            onDelete={management.canManage ? management.startDelete : undefined}
+          />,
           details.overlayElement,
         )}
+      <EditPlotDialog
+        open={management.edit.open}
+        form={management.edit.form}
+        alert={management.edit.alert}
+        isSaving={management.edit.isSaving}
+        onSubmit={management.edit.submit}
+        onClose={management.edit.close}
+      />
+      <DeletePlotDialog
+        open={management.remove.open}
+        alert={management.remove.alert}
+        isDeleting={management.remove.isDeleting}
+        onConfirm={management.remove.confirm}
+        onClose={management.remove.close}
+      />
       <Snackbar
         open={notice !== null}
         message={notice}
