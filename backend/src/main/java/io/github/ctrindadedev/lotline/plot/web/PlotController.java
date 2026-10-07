@@ -5,6 +5,7 @@ import io.github.ctrindadedev.lotline.plot.service.NewPlot;
 import io.github.ctrindadedev.lotline.plot.service.PlotChanges;
 import io.github.ctrindadedev.lotline.plot.service.PlotDetails;
 import io.github.ctrindadedev.lotline.plot.service.PlotService;
+import io.github.ctrindadedev.lotline.plot.service.PlotSummary;
 import io.github.ctrindadedev.lotline.plot.service.SearchFilters;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -87,6 +88,16 @@ class PlotController {
       @RequestParam @BoundingBox List<Double> bbox) {
     return toFeatureCollection(
         plotService.listInBoundingBox(bbox.get(0), bbox.get(1), bbox.get(2), bbox.get(3)));
+  }
+
+  @Operation(
+      summary = "Summarise the plots that intersect the map viewport",
+      description =
+          "Count per status, total area in m² and the min, median and max price per m²"
+              + " (null without plots).")
+  @GetMapping("/summary")
+  PlotSummary summarizeBoundingBox(@RequestParam @BoundingBox List<Double> bbox) {
+    return plotService.summarizeBoundingBox(bbox.get(0), bbox.get(1), bbox.get(2), bbox.get(3));
   }
 
   @Operation(

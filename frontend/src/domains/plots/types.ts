@@ -25,6 +25,17 @@ export interface PlotProperties {
 
 export type PlotFeature = GeoJsonFeature<PlotProperties>;
 
+/** Aggregates over the plots in view; the price figures are null when there are none. */
+export interface PlotsSummary {
+  available: number;
+  reserved: number;
+  sold: number;
+  totalAreaSquareMeters: number;
+  minPricePerSquareMeter: number | null;
+  medianPricePerSquareMeter: number | null;
+  maxPricePerSquareMeter: number | null;
+}
+
 export type PlotFeatureCollection = GeoJsonFeatureCollection<PlotProperties>;
 
 export interface PlotChanges {

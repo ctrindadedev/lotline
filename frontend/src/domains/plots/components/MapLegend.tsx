@@ -9,7 +9,7 @@ import { formatPricePerSquareMeter } from '../../../shared/i18n/format';
 import { messages } from '../../../shared/i18n/messages';
 import type { PlotStatus } from '../types';
 import { STATUS_COLORS } from '../utils/plotLook';
-import { RAMP_CSS, type ColourBy, type PriceRange } from '../utils/priceColours';
+import { RAMP_CSS, type ColourBy, type PriceRange, type PriceScope } from '../utils/priceColours';
 
 const text = messages.legend;
 const STATUSES: PlotStatus[] = ['AVAILABLE', 'RESERVED', 'SOLD'];
@@ -45,11 +45,11 @@ function Item({ swatch, label }: { swatch: ReactNode; label: string }) {
   );
 }
 
-function PriceScale({ range }: { range: PriceRange | null }) {
-  if (!range) {
+function PriceScale({ range, scope }: { range: PriceRange | null; scope: PriceScope }) {
+  if (!range || scope === 'zoomedOut') {
     return (
       <Typography component="li" variant="caption">
-        {text.noPrices}
+        {text.noPrices[scope]}
       </Typography>
     );
   }
@@ -69,7 +69,7 @@ function PriceScale({ range }: { range: PriceRange | null }) {
         <Typography variant="caption">{formatPricePerSquareMeter(range.max, 1)}</Typography>
       </Stack>
       <Typography variant="caption" color="text.secondary" component="p">
-        {text.logScale}
+        {text.logScale[scope]}
       </Typography>
     </li>
   );
@@ -79,9 +79,10 @@ interface MapLegendProps {
   colourBy: ColourBy;
   onColourBy: (mode: ColourBy) => void;
   priceRange: PriceRange | null;
+  priceScope: PriceScope;
 }
 
-export function MapLegend({ colourBy, onColourBy, priceRange }: MapLegendProps) {
+export function MapLegend({ colourBy, onColourBy, priceRange, priceScope }: MapLegendProps) {
   return (
     <Paper elevation={2} sx={{ px: 1.5, py: 1 }}>
       <ToggleButtonGroup
@@ -110,7 +111,7 @@ export function MapLegend({ colourBy, onColourBy, priceRange }: MapLegendProps) 
             />
           ))
         ) : (
-          <PriceScale range={priceRange} />
+          <PriceScale range={priceRange} scope={priceScope} />
         )}
         <Item swatch={<Swatch stroke="#57606a" fill="transparent" dashed />} label={text.mine} />
       </Stack>

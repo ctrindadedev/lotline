@@ -10,6 +10,28 @@ export interface PriceRange {
   max: number;
 }
 
+/** Which plots the price legend describes: those in view, the search results, or none yet. */
+export type PriceScope = 'view' | 'search' | 'zoomedOut';
+
+/**
+ * The range the map and its legend use. In view it is the server's summary, so the legend and the
+ * summary card show the same figures (PostGIS measures on the ellipsoid, the browser on a sphere).
+ */
+export function legendRange(
+  scope: PriceScope,
+  measured: PriceRange | null,
+  summary: { minPricePerSquareMeter: number | null; maxPricePerSquareMeter: number | null } | null,
+): PriceRange | null {
+  if (scope === 'zoomedOut') {
+    return null;
+  }
+  if (scope === 'view' && summary) {
+    const { minPricePerSquareMeter: min, maxPricePerSquareMeter: max } = summary;
+    return min !== null && max !== null ? { min, max } : null;
+  }
+  return measured;
+}
+
 type Rgb = [number, number, number];
 
 /** A sequential ramp from light yellow (cheapest) to dark red (most expensive). */

@@ -18,10 +18,10 @@ import { usePlotManagement } from './usePlotManagement';
 import { usePlotRegistration } from './usePlotRegistration';
 import { usePlotReservation } from './usePlotReservation';
 import { usePlotSearch } from './usePlotSearch';
-import { MIN_PLOTS_ZOOM, usePlotsInView } from './usePlotsInView';
+import { MIN_PLOTS_ZOOM, usePlotsInView, usePlotsSummary } from './usePlotsInView';
 import type { PlotPopupAction } from '../components/PlotPopup';
 import type { PlotFeature } from '../types';
-import { pricesOf, type ColourBy } from '../utils/priceColours';
+import { legendRange, pricesOf, type ColourBy, type PriceScope } from '../utils/priceColours';
 import { plotStyleFor } from '../utils/plotStyle';
 import { usePlotsPanel } from './usePlotsPanel';
 
@@ -29,6 +29,7 @@ export function useMapPage() {
   const { targetRef, map } = useMap();
   const viewport = useMapViewport(map);
   const plotsInView = usePlotsInView(viewport);
+  const areaSummary = usePlotsSummary(viewport);
   const interaction = useInteractionMode();
   const { user, isLoading: userLoading } = useCurrentUser();
   const navigate = useNavigate();
@@ -39,7 +40,12 @@ export function useMapPage() {
   const shownPlots = searching ? search.results : plotsInView.plots;
   const panel = usePlotsPanel(plotsInView.plots?.features ?? [], user?.id ?? null);
   const [colourBy, setColourBy] = useState<ColourBy>('status');
-  const prices = useMemo(() => pricesOf(shownPlots?.features ?? []), [shownPlots]);
+  const priceScope: PriceScope = searching ? 'search' : plotsInView.zoomedIn ? 'view' : 'zoomedOut';
+  const measured = useMemo(() => pricesOf(shownPlots?.features ?? []), [shownPlots]);
+  const prices = useMemo(
+    () => ({ byId: measured.byId, range: legendRange(priceScope, measured.range, areaSummary) }),
+    [priceScope, measured, areaSummary],
+  );
   const plotStyle = useMemo(() => plotStyleFor(colourBy, prices), [colourBy, prices]);
 
   useVectorLayer(map, search.circle, searchAreaStyle);
@@ -160,9 +166,10 @@ export function useMapPage() {
       plots: panel.plots,
       myPlotsLoading: panel.myPlotsLoading,
       myPlotsFailed: panel.myPlotsFailed,
+      areaSummary,
     },
     searchResults: search.results?.features ?? [],
-    legend: { colourBy, setColourBy, priceRange: prices.range },
+    legend: { colourBy, setColourBy, priceRange: prices.range, priceScope },
     details: {
       plot: details.plot,
       selectedId,
