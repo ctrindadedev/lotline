@@ -8,7 +8,7 @@ A web app where land is listed by its real shape rather than by an address.
 
 - **List a plot.** Draw its boundary on the map, vertex by vertex (undo with Ctrl+Z, cancel with Esc). The area is shown live, and vertices close to a neighbour's border snap onto it. Then give a price, a description and a contact. A plot that overlaps another one is refused; sharing a border is fine.
 - **Explore.** The map shows the plots in view and reloads them as you pan and zoom, with a summary of the area (plots per status, total area, median price per m²) and a list of cards. Colour the map by status or by price per m² to see where land is cheap or expensive.
-- **Search an area.** Draw a circle (its radius is shown live, in metres) to list the plots that reach into it, closest first. Narrow the results by price and area.
+- **Search an area.** Press on the map and drag out a circle, as on geojson.io: its radius follows the cursor, in metres, and releasing lists the plots that reach into it, closest first. Narrow the results by price and area.
 - **See a plot.** Click it for its price, area, price per m², description, status and listing date. The seller's contact is shown to logged-in users.
 - **Accounts.** Browsing is open to everyone. Listing a plot, seeing a contact and reserving need an account (name, email and password).
 - **Manage your plots.** The seller can change the price, description and contact, or remove the plot, while it is available.

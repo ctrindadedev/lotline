@@ -233,7 +233,7 @@ sequenceDiagram
     participant API as PlotController / PlotService
     participant DB as PostGIS
 
-    Buyer->>SPA: draws a circle (radius shown live, in metres)
+    Buyer->>SPA: presses and drags out a circle (radius follows the cursor, in metres)
     Note over SPA: centre and radius are measured geodesically,<br/>not in map units
     SPA->>API: GET /api/v1/plots/search?lat&lng&radiusMeters[&filters]
     API->>API: validate ranges, radius ≤ 50 km (400)

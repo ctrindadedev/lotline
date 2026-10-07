@@ -12,7 +12,7 @@ The map does three things with the mouse: explore (pan and zoom), draw a plot po
 - The modes are a closed set: `idle`, `drawingPlot`, `drawingSearch`, `editingPlot` and `searching`. The state is a discriminated union: `editingPlot` carries the drawn boundary and `searching` the drawn circle (centre in degrees, radius in metres); no other mode can.
 - A pure function `nextInteractionState(state, event)` reads the next mode from a transition table. An event the current mode does not handle returns the same state.
 - React holds the state with `useReducer(nextInteractionState, { mode: 'idle' })`. The page reads it through its orchestrating hook (`useMapPage`).
-- The mode decides the draw shape (`Polygon`, `Circle` or none). A single hook, `useDrawInteraction`, keeps at most one `Draw` interaction on the map: when the shape changes, it removes the old interaction before adding the new one.
+- The mode decides the draw shape (`Polygon`, `Circle` or none). A single hook, `useDrawInteraction`, keeps at most one `Draw` interaction on the map: when the shape changes, it removes the old interaction before adding the new one. A polygon is drawn corner by corner; a circle in one drag (press at the centre, drag out the radius, release), as on geojson.io.
 - In `searching`, the plots layer shows the search results instead of the plots in the viewport, and "Search an area" stays pressed: pressing it again leaves the search.
 - The toolbar is an exclusive toggle group. Pressing the active mode again cancels back to `idle`. While a drawn plot is edited, the button stays pressed as "Editing plot" and ignores clicks, so a stray click cannot discard the drawing and the typed values; the form has explicit Redraw and Cancel buttons.
 

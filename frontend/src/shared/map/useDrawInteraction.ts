@@ -1,7 +1,8 @@
 import type OlMap from 'ol/Map';
 import Circle from 'ol/geom/Circle';
 import Polygon from 'ol/geom/Polygon';
-import Draw, { type DrawEvent } from 'ol/interaction/Draw';
+import { always } from 'ol/events/condition';
+import Draw, { type DrawEvent, type Options as DrawOptionsOl } from 'ol/interaction/Draw';
 import Snap from 'ol/interaction/Snap';
 import type VectorSource from 'ol/source/Vector';
 import { useCallback, useEffect, useEffectEvent, useRef } from 'react';
@@ -16,6 +17,16 @@ interface DrawOptions {
   onCircle?: (circle: CircleArea) => void;
   /** Polygons snap to the vertices and edges of these features while being drawn. */
   snapTo?: VectorSource;
+}
+
+/**
+ * A polygon is drawn corner by corner; a circle in one drag, like geojson.io: press at the centre,
+ * drag out the radius, release. A click without a drag gives a zero radius, which is ignored.
+ */
+export function drawOptionsFor(shape: DrawShape): DrawOptionsOl {
+  return shape === 'Circle'
+    ? { type: shape, style: sketchLabelStyle, freehandCondition: always }
+    : { type: shape, style: sketchLabelStyle };
 }
 
 /** Keeps at most one draw interaction on the map: the one for `shape`, or none. */
@@ -42,7 +53,7 @@ export function useDrawInteraction(
     if (!map || !shape) {
       return;
     }
-    const draw = new Draw({ type: shape, style: sketchLabelStyle });
+    const draw = new Draw(drawOptionsFor(shape));
     draw.on('drawend', handleDrawEnd);
     map.addInteraction(draw);
     // Snap must be added after Draw, so it adjusts the pointer before Draw sees it.

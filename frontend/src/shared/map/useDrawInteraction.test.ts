@@ -1,3 +1,4 @@
+import { always } from 'ol/events/condition';
 import Feature from 'ol/Feature';
 import OlMap from 'ol/Map';
 import Circle from 'ol/geom/Circle';
@@ -10,7 +11,7 @@ import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { CircleArea } from './geodesy';
 import type { GeoJsonPolygon } from './geojson';
-import { useDrawInteraction, type DrawShape } from './useDrawInteraction';
+import { drawOptionsFor, useDrawInteraction, type DrawShape } from './useDrawInteraction';
 
 function draws(map: OlMap) {
   return map
@@ -207,5 +208,10 @@ describe('useDrawInteraction', () => {
 
     expect(removeLastPoint).toHaveBeenCalledOnce();
     removeLastPoint.mockRestore();
+  });
+
+  it('draws a circle in one drag and a polygon corner by corner', () => {
+    expect(drawOptionsFor('Circle')).toMatchObject({ type: 'Circle', freehandCondition: always });
+    expect(drawOptionsFor('Polygon').freehandCondition).toBeUndefined();
   });
 });
