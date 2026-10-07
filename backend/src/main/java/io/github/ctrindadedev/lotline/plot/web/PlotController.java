@@ -119,6 +119,24 @@ class PlotController {
     return ResponseEntity.noContent().build();
   }
 
+  @Operation(summary = "Reserve an available plot for the logged-in user")
+  @PostMapping("/{id}/reservation")
+  GeoJsonFeature<PlotProperties> reserve(@PathVariable UUID id) {
+    return toFeature(plotService.reserve(id, currentUser.requireId()));
+  }
+
+  @Operation(summary = "Release a reservation (the seller or the user who reserved)")
+  @DeleteMapping("/{id}/reservation")
+  GeoJsonFeature<PlotProperties> release(@PathVariable UUID id) {
+    return toFeature(plotService.release(id, currentUser.requireId()));
+  }
+
+  @Operation(summary = "Confirm the sale of a reserved plot (its owner only)")
+  @PostMapping("/{id}/sale")
+  GeoJsonFeature<PlotProperties> sell(@PathVariable UUID id) {
+    return toFeature(plotService.sell(id, currentUser.requireId()));
+  }
+
   private GeoJsonFeatureCollection<PlotProperties> toFeatureCollection(List<PlotDetails> plots) {
     return new GeoJsonFeatureCollection<>(plots.stream().map(this::toFeature).toList());
   }
@@ -133,6 +151,9 @@ class PlotController {
             plot.description(),
             me.isPresent() ? plot.contact() : null,
             plot.createdAt(),
-            plot.ownerId() != null && me.filter(plot.ownerId()::equals).isPresent()));
+            plot.status(),
+            plot.reservable(),
+            plot.ownerId() != null && me.filter(plot.ownerId()::equals).isPresent(),
+            plot.buyerId() != null && me.filter(plot.buyerId()::equals).isPresent()));
   }
 }

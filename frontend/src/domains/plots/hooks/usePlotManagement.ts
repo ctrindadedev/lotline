@@ -37,6 +37,8 @@ export function usePlotManagement(plot: PlotFeature | null) {
   function onError(error: Error) {
     if (error instanceof ApiError && error.status === 401) {
       forgetUser();
+    } else if (error instanceof ApiError && error.status === 409) {
+      return queryClient.invalidateQueries({ queryKey: plotKeys.all });
     }
   }
 
@@ -73,7 +75,7 @@ export function usePlotManagement(plot: PlotFeature | null) {
   const target = dialog?.plotId ?? '';
 
   return {
-    canManage: plot?.properties.ownedByMe ?? false,
+    canManage: plot?.properties.ownedByMe === true && plot.properties.status === 'AVAILABLE',
     startEdit,
     startDelete,
     edit: {

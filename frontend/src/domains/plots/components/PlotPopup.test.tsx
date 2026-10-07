@@ -26,7 +26,10 @@ const PLOT: PlotFeature = {
     description: 'Corner plot\nNear the park',
     contact: '+55 19 99999-0000',
     createdAt: '2026-10-06T15:00:00Z',
+    status: 'AVAILABLE',
+    reservable: true,
     ownedByMe: false,
+    reservedByMe: false,
   },
 };
 
@@ -51,18 +54,41 @@ describe('PlotPopup', () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  it('offers to edit or delete only when given the owner actions', async () => {
+  it('offers the actions it is given, disabled while one runs', async () => {
     const onEdit = vi.fn<() => void>();
     const onDelete = vi.fn<() => void>();
+    const actions = [
+      { label: messages.popup.edit, onClick: onEdit },
+      { label: messages.popup.delete, onClick: onDelete, color: 'error' as const },
+    ];
     const { rerender } = render(<PlotPopup plot={PLOT} onClose={() => {}} />);
     expect(screen.queryByRole('button', { name: messages.popup.edit })).not.toBeInTheDocument();
 
-    rerender(<PlotPopup plot={PLOT} onClose={() => {}} onEdit={onEdit} onDelete={onDelete} />);
+    rerender(<PlotPopup plot={PLOT} onClose={() => {}} actions={actions} />);
     await userEvent.click(screen.getByRole('button', { name: messages.popup.edit }));
     await userEvent.click(screen.getByRole('button', { name: messages.popup.delete }));
-
     expect(onEdit).toHaveBeenCalledOnce();
     expect(onDelete).toHaveBeenCalledOnce();
+
+    rerender(<PlotPopup plot={PLOT} onClose={() => {}} actions={actions} busy />);
+    expect(screen.getByRole('button', { name: messages.popup.edit })).toBeDisabled();
+  });
+
+  it('shows the status from the point of view of the user asking', () => {
+    const reserved = { ...PLOT.properties, status: 'RESERVED' as const };
+    const { rerender } = render(<PlotPopup plot={PLOT} onClose={() => {}} />);
+    expect(screen.getByText(messages.popup.status.AVAILABLE)).toBeInTheDocument();
+
+    rerender(<PlotPopup plot={{ ...PLOT, properties: reserved }} onClose={() => {}} />);
+    expect(screen.getByText(messages.popup.status.RESERVED)).toBeInTheDocument();
+
+    rerender(
+      <PlotPopup
+        plot={{ ...PLOT, properties: { ...reserved, reservedByMe: true } }}
+        onClose={() => {}}
+      />,
+    );
+    expect(screen.getByText(messages.popup.reservedByYou)).toBeInTheDocument();
   });
 
   it('asks visitors to log in to see the contact, and brings them back', async () => {

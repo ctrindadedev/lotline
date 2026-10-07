@@ -15,6 +15,25 @@ export const polygonStyle = new Style({
   stroke: new Stroke({ color: '#1f6feb', width: 2 }),
 });
 
+export const reservedPolygonStyle = new Style({
+  fill: new Fill({ color: 'rgb(191 135 0 / 25%)' }),
+  stroke: new Stroke({ color: '#bf8700', width: 2 }),
+});
+
+export const soldPolygonStyle = new Style({
+  fill: new Fill({ color: 'rgb(110 119 129 / 30%)' }),
+  stroke: new Stroke({ color: '#6e7781', width: 2 }),
+});
+
+/** Picks a feature's style by one of its properties, falling back to `fallback`. */
+export function styleByProperty(
+  key: string,
+  styles: Record<string, Style>,
+  fallback: Style,
+): (feature: FeatureLike) => Style {
+  return (feature) => styles[String(feature.get(key))] ?? fallback;
+}
+
 export const draftStyle = new Style({
   fill: new Fill({ color: 'rgb(219 109 40 / 25%)' }),
   stroke: new Stroke({ color: '#db6d28', width: 2, lineDash: [6, 4] }),

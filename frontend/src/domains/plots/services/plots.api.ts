@@ -37,3 +37,15 @@ export function updatePlot(id: string, changes: PlotChanges): Promise<PlotFeatur
 export function deletePlot(id: string): Promise<void> {
   return deleteJson(`/plots/${encodeURIComponent(id)}`);
 }
+
+export function reservePlot(id: string): Promise<PlotFeature> {
+  return postJson(`/plots/${encodeURIComponent(id)}/reservation`);
+}
+
+export function releaseReservation(id: string): Promise<PlotFeature> {
+  return deleteJson<PlotFeature>(`/plots/${encodeURIComponent(id)}/reservation`);
+}
+
+export function sellPlot(id: string): Promise<PlotFeature> {
+  return postJson(`/plots/${encodeURIComponent(id)}/sale`);
+}

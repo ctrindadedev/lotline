@@ -17,7 +17,10 @@ const MINE: PlotFeature = {
     description: 'Corner plot',
     contact: 'ana@example.com',
     createdAt: '2026-10-06T12:00:00Z',
+    status: 'AVAILABLE',
+    reservable: true,
     ownedByMe: true,
+    reservedByMe: false,
   },
 };
 
@@ -46,6 +49,8 @@ describe('usePlotManagement', () => {
     const notMine = { ...MINE, properties: { ...MINE.properties, ownedByMe: false } };
     expect(render(notMine).result.current.canManage).toBe(false);
     expect(render(null).result.current.canManage).toBe(false);
+    const reserved = { ...MINE, properties: { ...MINE.properties, status: 'RESERVED' as const } };
+    expect(render(reserved).result.current.canManage).toBe(false);
   });
 
   it('opens the editor filled in, saves the changes and says so', async () => {
@@ -88,6 +93,17 @@ describe('usePlotManagement', () => {
 
     act(() => result.current.edit.close());
     expect(result.current.edit.open).toBe(false);
+  });
+
+  it('refreshes the plots when the plot was reserved meanwhile', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(problem(409));
+    const { result, invalidate } = render();
+
+    act(() => result.current.startDelete());
+    act(() => result.current.remove.confirm());
+
+    await waitFor(() => expect(result.current.remove.alert).toBe(messages.manage.errors.frozen));
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['plots'] });
   });
 
   it('forgets the user when the session expired', async () => {

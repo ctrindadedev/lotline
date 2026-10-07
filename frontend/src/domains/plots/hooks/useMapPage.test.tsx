@@ -5,6 +5,7 @@ import type { GeoJsonPolygon } from '../../../shared/map/geojson';
 import { createQueryWrapper } from '../../../test/queryClient';
 import { EMPTY_PLOT_FORM } from '../utils/plotForm';
 import { useMapPage } from './useMapPage';
+import type { PlotFeature } from '../types';
 import { messages } from '../../../shared/i18n/messages';
 
 const BOUNDARY: GeoJsonPolygon = {
@@ -40,19 +41,25 @@ vi.mock('react-router', async (importOriginal) => ({
   useNavigate: () => navigate,
 }));
 
-const { plotDrawn, circleDrawn, closeDetails, detailsArgs, undoLastPoint } = vi.hoisted(() => ({
-  undoLastPoint: vi.fn<() => void>(),
-  plotDrawn: { current: null as ((polygon: GeoJsonPolygon) => void) | null },
-  circleDrawn: { current: null as ((circle: CircleArea) => void) | null },
-  closeDetails: vi.fn<() => void>(),
-  detailsArgs: { plots: undefined as unknown, enabled: false },
-}));
+const { plotDrawn, circleDrawn, closeDetails, detailsArgs, detailsPlot, undoLastPoint } =
+  vi.hoisted(() => ({
+    detailsPlot: { current: null as PlotFeature | null },
+    undoLastPoint: vi.fn<() => void>(),
+    plotDrawn: { current: null as ((polygon: GeoJsonPolygon) => void) | null },
+    circleDrawn: { current: null as ((circle: CircleArea) => void) | null },
+    closeDetails: vi.fn<() => void>(),
+    detailsArgs: { plots: undefined as unknown, enabled: false },
+  }));
 
 vi.mock('./usePlotDetails', () => ({
   usePlotDetails: (_map: unknown, _source: unknown, plots: unknown, enabled: boolean) => {
     detailsArgs.plots = plots;
     detailsArgs.enabled = enabled;
-    return { plot: null, overlayElement: document.createElement('div'), close: closeDetails };
+    return {
+      plot: detailsPlot.current,
+      overlayElement: document.createElement('div'),
+      close: closeDetails,
+    };
   },
 }));
 
@@ -302,5 +309,32 @@ describe('useMapPage', () => {
 
     act(() => result.current.toolbar.drawSearch());
     expect(result.current.mode).toBe('drawingSearch');
+  });
+
+  it('offers the actions of the open plot to the user asking', () => {
+    const plot: PlotFeature = {
+      type: 'Feature',
+      id: 'plot-1',
+      geometry: { type: 'Polygon', coordinates: [] },
+      properties: {
+        price: 1000,
+        description: 'A plot',
+        createdAt: '2026-10-07T12:00:00Z',
+        status: 'AVAILABLE',
+        reservable: true,
+        ownedByMe: false,
+        reservedByMe: false,
+      },
+    };
+    const labels = () => {
+      const { result } = renderHook(() => useMapPage(), { wrapper: createQueryWrapper() });
+      return result.current.details.actions.map((action) => action.label);
+    };
+
+    detailsPlot.current = plot;
+    expect(labels()).toEqual([messages.reservation.actions.reserve]);
+    detailsPlot.current = { ...plot, properties: { ...plot.properties, ownedByMe: true } };
+    expect(labels()).toEqual([messages.popup.edit, messages.popup.delete]);
+    detailsPlot.current = null;
   });
 });

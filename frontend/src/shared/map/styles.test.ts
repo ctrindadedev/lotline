@@ -5,7 +5,7 @@ import Polygon from 'ol/geom/Polygon';
 import { fromLonLat } from 'ol/proj';
 import type Style from 'ol/style/Style';
 import { describe, expect, it } from 'vitest';
-import { sketchLabelStyle } from './styles';
+import { polygonStyle, reservedPolygonStyle, sketchLabelStyle, styleByProperty } from './styles';
 
 function labelOf(styles: Style[]) {
   return styles.at(-1)?.getText()?.getText();
@@ -42,5 +42,15 @@ describe('sketchLabelStyle', () => {
       expect(styles.length).toBeGreaterThan(0);
       expect(styles.every((style) => !style.getText())).toBe(true);
     }
+  });
+});
+
+describe('styleByProperty', () => {
+  it('styles a feature by one of its properties, with a fallback', () => {
+    const style = styleByProperty('status', { RESERVED: reservedPolygonStyle }, polygonStyle);
+
+    expect(style(new Feature({ status: 'RESERVED' }))).toBe(reservedPolygonStyle);
+    expect(style(new Feature({ status: 'AVAILABLE' }))).toBe(polygonStyle);
+    expect(style(new Feature())).toBe(polygonStyle);
   });
 });

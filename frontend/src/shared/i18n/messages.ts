@@ -83,6 +83,34 @@ export const messages = {
     listedOn: (date: string) => `Anunciado em ${date}`,
     edit: 'Editar',
     delete: 'Excluir',
+    status: { AVAILABLE: 'Disponível', RESERVED: 'Reservado', SOLD: 'Vendido' },
+    reservedByYou: 'Reservado por você',
+    boughtByYou: 'Comprado por você',
+  },
+  reservation: {
+    actions: {
+      reserve: 'Reservar',
+      cancel: 'Cancelar reserva',
+      release: 'Liberar reserva',
+      sell: 'Confirmar venda',
+    },
+    saleTitle: 'Confirmar a venda?',
+    saleBody: 'O terreno fica como vendido para quem o reservou e não pode mais ser alterado.',
+    back: 'Voltar',
+    done: {
+      reserve: 'Terreno reservado.',
+      cancel: 'Reserva cancelada.',
+      release: 'Reserva liberada.',
+      sell: 'Venda confirmada.',
+    },
+    errors: {
+      sessionExpired: 'Sua sessão expirou. Entre novamente para continuar.',
+      notAllowed: 'Você não pode fazer isso com este terreno.',
+      gone: 'Este terreno não existe mais.',
+      changed: 'O status deste terreno mudou. Confira e tente novamente.',
+      server: 'Não foi possível concluir agora. Tente novamente em instantes.',
+      network: 'Não foi possível concluir. Confira sua conexão.',
+    },
   },
   manage: {
     editTitle: 'Editar terreno',
@@ -96,6 +124,7 @@ export const messages = {
     errors: {
       notOwner: 'Só quem anunciou pode alterar este terreno.',
       gone: 'Este terreno não existe mais.',
+      frozen: 'Este terreno foi reservado ou vendido e não pode mais ser alterado.',
       sessionExpired: 'Sua sessão expirou. Entre novamente para alterar o terreno.',
       server: 'Não foi possível concluir agora. Tente novamente em instantes.',
       network: 'Não foi possível concluir. Confira sua conexão.',
@@ -130,6 +159,7 @@ export const messages = {
       reasons: {
         listPlot: 'Entre na sua conta para anunciar um terreno.',
         seeContact: 'Entre na sua conta para ver o contato de quem anuncia.',
+        reservePlot: 'Entre na sua conta para reservar um terreno.',
       },
       submit: 'Entrar',
       noAccount: 'Ainda não tem conta?',

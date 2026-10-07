@@ -5,40 +5,50 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import { messages } from '../../../shared/i18n/messages';
 
-interface DeletePlotDialogProps {
+interface ConfirmDialogProps {
   open: boolean;
-  alert: string | null;
-  isDeleting: boolean;
+  title: string;
+  body: string;
+  confirmLabel: string;
+  cancelLabel: string;
+  color?: 'primary' | 'error';
+  alert?: string | null;
+  isWorking: boolean;
   onConfirm: () => void;
   onClose: () => void;
 }
 
-export function DeletePlotDialog({
+/** Asks before an action that cannot be undone. */
+export function ConfirmDialog({
   open,
+  title,
+  body,
+  confirmLabel,
+  cancelLabel,
+  color = 'primary',
   alert,
-  isDeleting,
+  isWorking,
   onConfirm,
   onClose,
-}: DeletePlotDialogProps) {
+}: ConfirmDialogProps) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs">
-      <DialogTitle>{messages.manage.deleteTitle}</DialogTitle>
+      <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         {alert && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {alert}
           </Alert>
         )}
-        <DialogContentText>{messages.manage.deleteBody}</DialogContentText>
+        <DialogContentText>{body}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={isDeleting}>
-          {messages.manage.cancel}
+        <Button onClick={onClose} disabled={isWorking}>
+          {cancelLabel}
         </Button>
-        <Button color="error" variant="contained" onClick={onConfirm} loading={isDeleting}>
-          {messages.manage.confirmDelete}
+        <Button color={color} variant="contained" onClick={onConfirm} loading={isWorking}>
+          {confirmLabel}
         </Button>
       </DialogActions>
     </Dialog>

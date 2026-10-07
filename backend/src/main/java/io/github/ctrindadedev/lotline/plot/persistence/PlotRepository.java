@@ -1,10 +1,13 @@
 package io.github.ctrindadedev.lotline.plot.persistence;
 
+import jakarta.persistence.LockModeType;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.locationtech.jts.geom.Polygon;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -31,6 +34,10 @@ public interface PlotRepository extends JpaRepository<Plot, UUID> {
       ORDER BY ST_Distance(CAST(p.boundary AS geography),
           CAST(ST_SetSRID(ST_MakePoint(:lng, :lat), 4326) AS geography)), p.id
       """;
+
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("SELECT p FROM Plot p WHERE p.id = :id")
+  Optional<Plot> findByIdForUpdate(@Param("id") UUID id);
 
   @Query(value = "SELECT ST_Area(CAST(:boundary AS geography))", nativeQuery = true)
   double areaInSquareMeters(@Param("boundary") Polygon boundary);

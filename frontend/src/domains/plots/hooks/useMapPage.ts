@@ -1,7 +1,15 @@
 import { useNavigate } from 'react-router';
 import { useCurrentUser, type AuthRedirect } from '../../auth';
 import { isTyping, useKeyDown } from '../../../shared/hooks/useKeyDown';
-import { draftStyle, searchAreaStyle } from '../../../shared/map/styles';
+import { messages } from '../../../shared/i18n/messages';
+import {
+  draftStyle,
+  polygonStyle,
+  reservedPolygonStyle,
+  searchAreaStyle,
+  soldPolygonStyle,
+  styleByProperty,
+} from '../../../shared/map/styles';
 import { useDrawInteraction } from '../../../shared/map/useDrawInteraction';
 import { useMap } from '../../../shared/map/useMap';
 import { useMapViewport } from '../../../shared/map/useMapViewport';
@@ -13,8 +21,16 @@ import { useInteractionMode } from './useInteractionMode';
 import { usePlotDetails } from './usePlotDetails';
 import { usePlotManagement } from './usePlotManagement';
 import { usePlotRegistration } from './usePlotRegistration';
+import { usePlotReservation } from './usePlotReservation';
 import { usePlotSearch } from './usePlotSearch';
 import { usePlotsInView } from './usePlotsInView';
+import type { PlotPopupAction } from '../components/PlotPopup';
+
+const plotStyle = styleByProperty(
+  'status',
+  { RESERVED: reservedPolygonStyle, SOLD: soldPolygonStyle },
+  polygonStyle,
+);
 
 export function useMapPage() {
   const { targetRef, map } = useMap();
@@ -30,10 +46,24 @@ export function useMapPage() {
   const shownPlots = searching ? search.results : plotsInView.plots;
 
   useVectorLayer(map, search.circle, searchAreaStyle);
-  const plotsSource = useVectorLayer(map, shownPlots);
+  const plotsSource = useVectorLayer(map, shownPlots, plotStyle);
   useVectorLayer(map, registration.draft, draftStyle);
   const details = usePlotDetails(map, plotsSource, shownPlots, mode === 'idle' || searching);
   const management = usePlotManagement(details.plot);
+  const reservation = usePlotReservation(details.plot);
+  const popupActions: PlotPopupAction[] = [
+    ...reservation.actions.map(({ label, run }) => ({ label, onClick: run })),
+    ...(management.canManage
+      ? [
+          { label: messages.popup.edit, onClick: management.startEdit },
+          {
+            label: messages.popup.delete,
+            onClick: management.startDelete,
+            color: 'error' as const,
+          },
+        ]
+      : []),
+  ];
   const draw = useDrawInteraction(map, drawShapeFor(mode), {
     onPolygon: interaction.plotDrawn,
     onCircle: interaction.circleDrawn,
@@ -107,12 +137,16 @@ export function useMapPage() {
       plot: details.plot,
       overlayElement: details.overlayElement,
       close: details.close,
+      actions: popupActions,
+      busy: reservation.isBusy,
     },
     management,
-    notice: registration.notice ?? management.notice,
+    sale: reservation.sale,
+    notice: registration.notice ?? management.notice ?? reservation.notice,
     dismissNotice: () => {
       registration.dismissNotice();
       management.dismissNotice();
+      reservation.dismissNotice();
     },
   };
 }

@@ -10,6 +10,7 @@ describe('describeManageError', () => {
     [401, errors.sessionExpired],
     [403, errors.notOwner],
     [404, errors.gone],
+    [409, errors.frozen],
     [500, errors.server],
   ])('explains a %d', (status, message) => {
     expect(describeManageError(new ApiError(status, 'x', 'x'))).toBe(message);

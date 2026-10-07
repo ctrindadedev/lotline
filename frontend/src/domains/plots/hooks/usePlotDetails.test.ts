@@ -26,7 +26,10 @@ const PLOT: PlotFeature = {
     description: 'A plot',
     contact: 'a@b.c',
     createdAt: '2026-10-06',
+    status: 'AVAILABLE',
+    reservable: true,
     ownedByMe: false,
+    reservedByMe: false,
   },
 };
 
