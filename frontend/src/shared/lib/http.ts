@@ -54,6 +54,20 @@ export function deleteJson<T = void>(path: string): Promise<T> {
   return send<T>('DELETE', path);
 }
 
+// The API's detail for a write without a valid CSRF token (ApiExceptionHandler, ADR 0018).
+const CSRF_REJECTED = 'Missing or invalid CSRF token';
+
+/**
+ * The session ended: a 401, or a write refused for its CSRF token, which a logout in another tab
+ * clears while this one still shows the user.
+ */
+export function isSessionLost(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    (error.status === 401 || (error.status === 403 && error.message === CSRF_REJECTED))
+  );
+}
+
 const CSRF_COOKIE = 'XSRF-TOKEN';
 const CSRF_HEADER = 'X-XSRF-TOKEN';
 

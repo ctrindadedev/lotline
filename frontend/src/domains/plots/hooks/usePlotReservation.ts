@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useCurrentUser, useForgetUser, type AuthRedirect } from '../../auth';
 import { messages } from '../../../shared/i18n/messages';
-import { ApiError } from '../../../shared/lib/http';
+import { isSessionLost } from '../../../shared/lib/http';
 import { releaseReservation, reservePlot, sellPlot } from '../services/plots.api';
 import type { PlotFeature } from '../types';
 import {
@@ -25,7 +25,7 @@ const perform: Record<ReservationAction, (id: string) => Promise<PlotFeature>> =
 
 /** Reserving, releasing and selling the plot whose details are open (ADR 0021). */
 export function usePlotReservation(plot: PlotFeature | null) {
-  const { user } = useCurrentUser();
+  const { user, isLoading: userLoading } = useCurrentUser();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const forgetUser = useForgetUser();
@@ -40,7 +40,7 @@ export function usePlotReservation(plot: PlotFeature | null) {
     },
     onError: (error) => {
       setNotice(describeReservationError(error));
-      if (error instanceof ApiError && error.status === 401) {
+      if (isSessionLost(error)) {
         forgetUser();
       } else {
         return queryClient.invalidateQueries({ queryKey: plotKeys.all });
@@ -50,7 +50,7 @@ export function usePlotReservation(plot: PlotFeature | null) {
   });
 
   function run(action: ReservationAction) {
-    if (!plot) {
+    if (!plot || userLoading) {
       return;
     }
     if (!user) {

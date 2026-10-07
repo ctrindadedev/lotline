@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApiError, buildUrl, deleteJson, getJson, postJson, putJson } from './http';
+import { ApiError, buildUrl, deleteJson, getJson, isSessionLost, postJson, putJson } from './http';
 
 function jsonResponse(body: unknown, status = 200, contentType = 'application/json') {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': contentType } });
@@ -168,5 +168,17 @@ describe('writes', () => {
       headers: {},
       body: undefined,
     });
+  });
+});
+
+describe('isSessionLost', () => {
+  it('is a 401 or a write refused for its CSRF token, nothing else', () => {
+    expect(isSessionLost(new ApiError(401, 'Unauthorized', 'Log in to do this'))).toBe(true);
+    expect(isSessionLost(new ApiError(403, 'Forbidden', 'Missing or invalid CSRF token'))).toBe(
+      true,
+    );
+    expect(isSessionLost(new ApiError(403, 'Forbidden', 'You cannot do this'))).toBe(false);
+    expect(isSessionLost(new ApiError(500, 'Error', 'Missing or invalid CSRF token'))).toBe(false);
+    expect(isSessionLost(new TypeError('Failed to fetch'))).toBe(false);
   });
 });

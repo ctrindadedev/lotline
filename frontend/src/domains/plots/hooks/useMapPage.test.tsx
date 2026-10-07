@@ -279,6 +279,21 @@ describe('useMapPage', () => {
     auth.isLoading = false;
   });
 
+  it('forgets the user when another tab logged out before the plot was saved', async () => {
+    forgetUser.mockClear();
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      problem(403, { title: 'Forbidden', detail: 'Missing or invalid CSRF token' }),
+    );
+    const { result } = renderPage();
+
+    await fillAndSubmit(result);
+
+    await waitFor(() => expect(forgetUser).toHaveBeenCalledOnce());
+    expect(result.current.plotForm!.alert.message).toBe(
+      messages.plotForm.saveErrors.sessionExpired,
+    );
+  });
+
   it('forgets the user when the session expired while drawing', async () => {
     forgetUser.mockClear();
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(problem(401, { title: 'Unauthorized' }));

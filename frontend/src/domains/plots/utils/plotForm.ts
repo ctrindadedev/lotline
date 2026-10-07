@@ -1,6 +1,6 @@
 import type { FieldErrors, Resolver } from 'react-hook-form';
 import { messages } from '../../../shared/i18n/messages';
-import { ApiError } from '../../../shared/lib/http';
+import { ApiError, isSessionLost } from '../../../shared/lib/http';
 
 export interface PlotFormValues {
   price: string;
@@ -93,11 +93,12 @@ export function describeSaveError(error: Error | null): SaveErrorView {
   if (!(error instanceof ApiError)) {
     return { ...NO_ERROR, message: text.saveErrors.network };
   }
+  if (isSessionLost(error)) {
+    return { ...NO_ERROR, message: text.saveErrors.sessionExpired };
+  }
   switch (error.status) {
     case 400:
       return describeInvalidFields(error);
-    case 401:
-      return { ...NO_ERROR, message: text.saveErrors.sessionExpired };
     case 409:
       return { ...NO_ERROR, message: text.saveErrors.overlap };
     case 422:

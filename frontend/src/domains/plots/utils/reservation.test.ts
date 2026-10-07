@@ -58,4 +58,10 @@ describe('describeReservationError', () => {
   it('explains a network failure', () => {
     expect(describeReservationError(new TypeError('Failed to fetch'))).toBe(errors.network);
   });
+
+  it('treats a refused CSRF token as an ended session', () => {
+    expect(
+      describeReservationError(new ApiError(403, 'Forbidden', 'Missing or invalid CSRF token')),
+    ).toBe(messages.reservation.errors.sessionExpired);
+  });
 });

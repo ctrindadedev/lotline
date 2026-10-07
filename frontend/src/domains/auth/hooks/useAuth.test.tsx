@@ -50,7 +50,7 @@ describe('auth hooks', () => {
     expect(predicate({ queryKey: ['auth', 'me'] })).toBe(false);
   });
 
-  it('forgets the user when told the session is gone and refetches what depended on it', async () => {
+  it('forgets the user when the session is gone and asks the server again for everything', async () => {
     const client = createTestQueryClient();
     client.setQueryData(authKeys.me, ANA);
     const invalidate = vi.spyOn(client, 'invalidateQueries');
@@ -59,7 +59,8 @@ describe('auth hooks', () => {
     await act(() => result.current());
 
     expect(client.getQueryData(authKeys.me)).toBeNull();
-    expect(invalidate).toHaveBeenCalledOnce();
+    // Every query, "me" included: asking it again brings a new CSRF cookie.
+    expect(invalidate).toHaveBeenCalledExactlyOnceWith();
   });
 
   it('forgets the user on logout and refetches everything', async () => {

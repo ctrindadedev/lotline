@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useForgetUser } from '../../auth';
 import { messages } from '../../../shared/i18n/messages';
-import { ApiError } from '../../../shared/lib/http';
+import { isSessionLost } from '../../../shared/lib/http';
 import { polygonAreaSquareMeters } from '../../../shared/map/geodesy';
 import { polygonCollection } from '../../../shared/map/geojson';
 import {
@@ -33,7 +33,7 @@ export function usePlotRegistration(interaction: Interaction) {
       setNotice(messages.plotForm.saved);
     },
     onError: (error) => {
-      if (error instanceof ApiError && error.status === 401) {
+      if (isSessionLost(error)) {
         forgetUser();
       }
       for (const [field, message] of Object.entries(describeSaveError(error).fieldErrors)) {

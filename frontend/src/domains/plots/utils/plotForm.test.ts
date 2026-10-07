@@ -139,6 +139,15 @@ describe('describeSaveError', () => {
     });
   });
 
+  it('says the session ended for a 401 or a refused CSRF token', () => {
+    expect(describeSaveError(new ApiError(401, 'Unauthorized', 'x')).message).toBe(
+      errors.sessionExpired,
+    );
+    expect(
+      describeSaveError(new ApiError(403, 'Forbidden', 'Missing or invalid CSRF token')).message,
+    ).toBe(errors.sessionExpired);
+  });
+
   it('falls back to a generic message for server and network failures', () => {
     expect(describeSaveError(new ApiError(500, 'Error', 'boom')).message).toBe(errors.server);
     expect(describeSaveError(new TypeError('Failed to fetch')).message).toBe(errors.network);
