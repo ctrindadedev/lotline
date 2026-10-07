@@ -4,6 +4,7 @@ import Stack from '@mui/material/Stack';
 import { useForm } from 'react-hook-form';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router';
 import { FormTextField } from '../../../shared/components/FormTextField';
+import { PasswordField } from '../../../shared/components/PasswordField';
 import { messages } from '../../../shared/i18n/messages';
 import { useRegister } from '../hooks/useAuth';
 import type { NewAccount } from '../types';
@@ -25,6 +26,8 @@ export function RegisterPage() {
   const register = useRegister();
   const form = useForm<NewAccount>({
     defaultValues: EMPTY_ACCOUNT,
+    // Fields are checked on submit only, and their messages change only on the next submit.
+    reValidateMode: 'onSubmit',
     resolver: resolverFor(validateAccount),
   });
 
@@ -76,11 +79,12 @@ export function RegisterPage() {
           autoComplete="email"
           required
         />
-        <FormTextField
+        <PasswordField
           name="password"
           control={form.control}
           label={text.fields.password}
-          type="password"
+          showLabel={text.fields.showPassword}
+          hideLabel={text.fields.hidePassword}
           autoComplete="new-password"
           helperText={text.register.passwordHint}
           required

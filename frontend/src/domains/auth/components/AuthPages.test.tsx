@@ -88,7 +88,7 @@ describe('login and registration', () => {
     expect(await screen.findByText(text.errors.badCredentials)).toBeInTheDocument();
   });
 
-  it('shows field errors the API sends back on the login form', async () => {
+  it('answers a field the API rejects on login with the same generic message', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) =>
       String(url).endsWith('/auth/me')
         ? problem(401)
@@ -100,7 +100,23 @@ describe('login and registration', () => {
     await userEvent.type(field(text.fields.password), 'secret123');
     await userEvent.click(screen.getByRole('button', { name: text.logIn.submit }));
 
-    expect(await screen.findByText(text.errors.emailInvalid)).toBeInTheDocument();
+    expect(await screen.findByText(text.errors.badCredentials)).toBeInTheDocument();
+    expect(screen.queryByText(text.errors.emailInvalid)).not.toBeInTheDocument();
+  });
+
+  it('answers an incomplete login form with the generic message, without asking the API', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => problem(401));
+    renderAt('/login');
+
+    await userEvent.type(field(text.fields.email), 'not-an-email');
+    await userEvent.tab();
+    expect(screen.queryByText(text.errors.badCredentials)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: text.logIn.submit }));
+
+    expect(screen.getByText(text.errors.badCredentials)).toBeInTheDocument();
+    expect(screen.queryByText(text.errors.emailInvalid)).not.toBeInTheDocument();
+    expect(screen.queryByText(text.errors.passwordRequired)).not.toBeInTheDocument();
+    expect(fetchMock.mock.calls.every(([url]) => String(url).endsWith('/auth/me'))).toBe(true);
   });
 
   it('checks the form before sending it', async () => {
@@ -113,7 +129,7 @@ describe('login and registration', () => {
     expect(fetchMock.mock.calls.every(([url]) => String(url).endsWith('/auth/me'))).toBe(true);
   });
 
-  it('registers, and puts a taken email on its field', async () => {
+  it('registers, and says only that a taken email could not be used', async () => {
     let taken = true;
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
       if (String(url).endsWith('/auth/me')) return problem(401);
@@ -129,7 +145,7 @@ describe('login and registration', () => {
     await userEvent.type(field(text.fields.email), 'ana@example.com');
     await userEvent.type(field(text.fields.password), 'secret123');
     await userEvent.click(screen.getByRole('button', { name: text.register.submit }));
-    expect(await screen.findByText(text.errors.emailTaken)).toBeInTheDocument();
+    expect(await screen.findByText(text.errors.registrationFailed)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: text.register.submit }));
     await waitFor(() => expect(screen.getByText('map')).toBeInTheDocument());
@@ -153,5 +169,51 @@ describe('login and registration', () => {
     await waitFor(() =>
       expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith('/auth/logout'))).toBe(true),
     );
+  });
+
+  it('checks the registration only when it is sent', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async () => problem(401));
+    renderAt('/register');
+    const email = field(text.fields.email);
+
+    await userEvent.type(email, 'ana@');
+    await userEvent.tab();
+    expect(screen.queryByText(text.errors.emailInvalid)).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: text.register.submit }));
+    expect(await screen.findByText(text.errors.emailInvalid)).toBeInTheDocument();
+
+    // Corrected but not sent again: the message stays until the next submit.
+    await userEvent.type(email, 'example.com');
+    expect(screen.getByText(text.errors.emailInvalid)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: text.register.submit }));
+    await waitFor(() =>
+      expect(screen.queryByText(text.errors.emailInvalid)).not.toBeInTheDocument(),
+    );
+  });
+
+  it('refuses a password of spaces before asking the API', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch');
+    renderAt('/register');
+
+    await userEvent.type(field(text.fields.name), 'Ana');
+    await userEvent.type(field(text.fields.email), 'ana@example.com');
+    await userEvent.type(field(text.fields.password), '        ');
+    await userEvent.click(screen.getByRole('button', { name: text.register.submit }));
+
+    expect(await screen.findByText(text.errors.passwordRequired)).toBeInTheDocument();
+    expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith('/register'))).toBe(false);
+  });
+
+  it('shows and hides the password', async () => {
+    renderAt('/login');
+    const password = field(text.fields.password);
+    expect(password).toHaveAttribute('type', 'password');
+
+    await userEvent.click(screen.getByRole('button', { name: text.fields.showPassword }));
+    expect(password).toHaveAttribute('type', 'text');
+
+    await userEvent.click(screen.getByRole('button', { name: text.fields.hidePassword }));
+    expect(password).toHaveAttribute('type', 'password');
   });
 });

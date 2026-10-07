@@ -9,6 +9,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD = 8;
 const MAX_PASSWORD_BYTES = 72;
 const MAX_NAME = 100;
+const MAX_EMAIL = 255;
 
 export const EMPTY_CREDENTIALS: Credentials = { email: '', password: '' };
 export const EMPTY_ACCOUNT: NewAccount = { name: '', email: '', password: '' };
@@ -26,7 +27,10 @@ export function validateCredentials({ email, password }: Credentials): Errors<Cr
   return errors;
 }
 
-/** Mirrors the API: name up to 100, a valid email, a password of 8 characters to 72 bytes. */
+/**
+ * Mirrors `RegisterRequest`: a name up to 100 characters, a valid email up to 255, and a
+ * password that is not blank, of 8 characters to 72 bytes (BCrypt ignores the rest).
+ */
 export function validateAccount({ name, email, password }: NewAccount): Errors<NewAccount> {
   const errors: Errors<NewAccount> = {};
   if (!name.trim()) {
@@ -36,8 +40,12 @@ export function validateAccount({ name, email, password }: NewAccount): Errors<N
   }
   if (!EMAIL_PATTERN.test(email.trim())) {
     errors.email = text.emailInvalid;
+  } else if (email.trim().length > MAX_EMAIL) {
+    errors.email = text.emailTooLong;
   }
-  if (password.length < MIN_PASSWORD) {
+  if (!password.trim()) {
+    errors.password = text.passwordRequired;
+  } else if (password.length < MIN_PASSWORD) {
     errors.password = text.passwordTooShort;
   } else if (new TextEncoder().encode(password).length > MAX_PASSWORD_BYTES) {
     errors.password = text.passwordTooLong;
@@ -81,7 +89,21 @@ const FIELD_MESSAGES: Record<keyof NewAccount, string> = {
   password: text.passwordTooShort,
 };
 
-/** Portuguese text for an API error on the login or registration form. */
+/**
+ * Portuguese text for a failed login. Always the same for a malformed form, a rejected field or
+ * wrong credentials: the page never says which of the two was wrong.
+ */
+export function describeLoginError(error: Error | null): string | null {
+  if (!error) {
+    return null;
+  }
+  if (!(error instanceof ApiError)) {
+    return text.network;
+  }
+  return error.status === 400 || error.status === 401 ? text.badCredentials : text.server;
+}
+
+/** Portuguese text for an API error on the registration form. */
 export function describeAuthError(error: Error | null): AuthErrorView {
   if (!error) {
     return { message: null, fieldErrors: {} };
@@ -93,7 +115,8 @@ export function describeAuthError(error: Error | null): AuthErrorView {
     case 401:
       return { message: text.badCredentials, fieldErrors: {} };
     case 409:
-      return { message: null, fieldErrors: { email: text.emailTaken } };
+      // Generic on purpose: "this email has an account" would tell anyone who has one.
+      return { message: text.registrationFailed, fieldErrors: {} };
     case 400: {
       const fieldErrors: Errors<NewAccount> = {};
       for (const { field } of error.errors) {
