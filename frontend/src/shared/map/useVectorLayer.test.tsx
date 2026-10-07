@@ -1,6 +1,7 @@
 import OlMap from 'ol/Map';
 import VectorLayer from 'ol/layer/Vector';
 import type VectorSource from 'ol/source/Vector';
+import Style from 'ol/style/Style';
 import { renderHook } from '@testing-library/react';
 import { StrictMode } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -70,5 +71,20 @@ describe('useVectorLayer', () => {
     renderHook(() => useVectorLayer(null, collection('a')));
 
     expect(map.getLayers().getLength()).toBe(0);
+  });
+
+  it('restyles the same layer when the style changes', () => {
+    const map = new OlMap({});
+    const first = new Style();
+    const second = new Style();
+    const { rerender } = renderHook(({ style }) => useVectorLayer(map, collection('a'), style), {
+      initialProps: { style: first },
+    });
+    const [layer] = map.getLayers().getArray() as VectorLayer<VectorSource>[];
+
+    rerender({ style: second });
+
+    expect(map.getLayers().getArray()).toEqual([layer]);
+    expect(layer.getStyle()).toBe(second);
   });
 });

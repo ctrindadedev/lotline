@@ -28,6 +28,7 @@ export function MapPage() {
     searchPanel,
     plotsPanel,
     searchResults,
+    legend,
     details,
     management,
     sale,
@@ -49,7 +50,11 @@ export function MapPage() {
         </div>
         <div ref={mapTargetRef} className={styles.map} data-testid="map" />
         <div className={styles.legend}>
-          <MapLegend />
+          <MapLegend
+            colourBy={legend.colourBy}
+            onColourBy={legend.setColourBy}
+            priceRange={legend.priceRange}
+          />
         </div>
       </section>
       <aside className={styles.panel} aria-label={messages.map.panel}>

@@ -44,6 +44,10 @@ export const messages = {
   legend: {
     label: 'Legenda',
     mine: 'Seu anúncio',
+    colourBy: 'Colorir por',
+    modes: { status: 'Status', price: 'Preço/m²' },
+    logScale: 'escala logarítmica, terrenos na tela',
+    noPrices: 'Nenhum terreno na tela.',
   },
   plotsInView: {
     mapLoading: 'Carregando o mapa…',
