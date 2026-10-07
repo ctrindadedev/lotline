@@ -73,8 +73,9 @@ class PlotSummaryTests {
         .perform(post("/api/v1/plots/" + reserved + "/reservation").with(loggedInAs(buyer)))
         .andExpect(status().isOk());
     double area =
-        plotRepository.areaInSquareMeters(
-            polygon("POLYGON((-47 -22, -46.99 -22, -46.99 -21.99, -47 -21.99, -47 -22))"));
+        plotRepository
+            .measure(polygon("POLYGON((-47 -22, -46.99 -22, -46.99 -21.99, -47 -21.99, -47 -22))"))
+            .getArea();
 
     mockMvc
         .perform(get("/api/v1/plots/summary").param("bbox", VIEWPORT))

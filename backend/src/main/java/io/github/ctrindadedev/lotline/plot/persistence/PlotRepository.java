@@ -68,8 +68,15 @@ public interface PlotRepository extends JpaRepository<Plot, UUID> {
       @Param("maxLng") double maxLng,
       @Param("maxLat") double maxLat);
 
-  @Query(value = "SELECT ST_Area(CAST(:boundary AS geography))", nativeQuery = true)
-  double areaInSquareMeters(@Param("boundary") Polygon boundary);
+  // Segmentize first, like the overlap check: long edges cast as-is are read as great-circle arcs.
+  @Query(
+      value =
+          """
+          SELECT ST_Area(g) AS "area", ST_Perimeter(g) AS "perimeter"
+          FROM (SELECT CAST(ST_Segmentize(:boundary, 0.0001) AS geography) AS g) AS measured
+          """,
+      nativeQuery = true)
+  PlotMeasures measure(@Param("boundary") Polygon boundary);
 
   @Query(
       value = "SELECT true FROM pg_advisory_xact_lock(hashtext('plot-registration'))",

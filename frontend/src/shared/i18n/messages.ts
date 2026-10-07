@@ -108,7 +108,8 @@ export const messages = {
       highlighted: 'Confira os campos destacados.',
       rejected: 'O servidor recusou os dados do terreno.',
       overlap: 'Este terreno sobrepõe um terreno já anunciado. Redesenhe-o numa área livre.',
-      invalidDrawing: 'O desenho não é um terreno válido. Confira se as bordas não se cruzam.',
+      invalidDrawing:
+        'O desenho não é um terreno válido. Confira se as bordas não se cruzam e se o terreno tem pelo menos uns 2 m de largura.',
       sessionExpired: 'Sua sessão expirou. Entre novamente para salvar o terreno.',
       server: 'Não foi possível salvar o terreno. Tente novamente em instantes.',
       network: 'Não foi possível salvar o terreno. Confira sua conexão.',
