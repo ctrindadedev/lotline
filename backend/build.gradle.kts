@@ -57,6 +57,11 @@ val coverageExclusions = listOf("io/github/ctrindadedev/lotline/LotlineApplicati
 
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
+    reports {
+        // XML for the coverage table in the CI run summary; HTML to browse.
+        xml.required = true
+        html.required = true
+    }
     classDirectories.setFrom(classDirectories.files.map { fileTree(it) { exclude(coverageExclusions) } })
 }
 

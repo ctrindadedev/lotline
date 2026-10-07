@@ -19,7 +19,8 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       // Keep in sync with "Coverage exclusions" in the README.
       exclude: ['src/main.tsx', 'src/test/**', 'src/**/*.test.{ts,tsx}', 'src/**/*.d.ts'],
-      reporter: ['text', 'html'],
+      // json-summary feeds the coverage table in the CI run summary.
+      reporter: ['text', 'html', 'json-summary'],
       thresholds: {
         lines: 80,
         statements: 80,
