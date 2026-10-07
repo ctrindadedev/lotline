@@ -35,7 +35,7 @@ Browser (React + OpenLayers) ──► nginx ──► Spring Boot API ──►
 
 ### Architecture decisions
 
-The architecture overview, with diagrams of every view and the index of all decision records, is in [docs/architecture.md](docs/architecture.md). Each decision has its own record in [docs/adr/](docs/adr/).
+The architecture overview, with diagrams of every view, the [design patterns and SOLID principles in use](docs/architecture.md#43-design-patterns-and-solid) and the index of all decision records, is in [docs/architecture.md](docs/architecture.md). Each decision has its own record in [docs/adr/](docs/adr/).
 
 ## Running with Docker
 

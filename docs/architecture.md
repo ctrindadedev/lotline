@@ -7,7 +7,7 @@ Contents:
 1. [Requirements and quality goals](#1-requirements-and-quality-goals)
 2. [Context](#2-context)
 3. [Solution strategy](#3-solution-strategy)
-4. [Building blocks](#4-building-blocks)
+4. [Building blocks](#4-building-blocks), including [design patterns and SOLID](#43-design-patterns-and-solid)
 5. [Data](#5-data)
 6. [Runtime flows](#6-runtime-flows)
 7. [Deployment](#7-deployment)
@@ -160,6 +160,32 @@ stateDiagram-v2
     searching --> drawingPlot: drawPlot
     searching --> idle: cancel
 ```
+
+### 4.3 Design patterns and SOLID
+
+Patterns are used where they solve a concrete problem; each line points to the code.
+
+| Pattern                                | Where                                                                                                                                                        | Why                                                                                                                                                               |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repository                             | `PlotRepository`, `UserRepository` (Spring Data)                                                                                                             | Services ask for plots in domain terms; the SQL, including the native `ST_*` queries, stays in one interface per aggregate.                                       |
+| Data Transfer Object                   | Request/response records in `web` (`CreatePlotRequest`, `PlotProperties`, …); `PlotDetails`, `NewPlot`, `PlotChanges`, `PlotSummary` between service and web | The JPA entity never leaves the service, so the JSON shape and the table can change independently.                                                                |
+| Mapper                                 | `GeoJsonMapper` (GeoJSON ↔ JTS), `PlotDetails.from`, `PlotController.toFeature`                                                                              | One place creates geometries, always with SRID 4326 (ADR 0005).                                                                                                   |
+| Rich domain model with a state machine | `Plot.reserve` / `release` / `sell` / `ensureChangeable`                                                                                                     | The status rules live with the data they guard and are unit-tested without Spring (ADR 0021). Three states do not need the GoF State pattern (a class per state). |
+| Table-driven state machine             | `TRANSITIONS` and `nextInteractionState` in `interactionMode.ts`, run by `useReducer`                                                                        | Map modes are a closed set; an event a mode does not handle is ignored by construction (ADR 0014).                                                                |
+| Facade                                 | `useMapPage` over the feature hooks; `identity.CurrentUser` over Spring Security                                                                             | `MapPage` renders one object; the `plot` module asks for a user id without knowing about authentication.                                                          |
+| Strategy (as functions)                | `plotStyleFor` picks the status or the price look; `perform` in `usePlotReservation` maps each action to its API call                                        | Adding a colour mode or an action is a new entry, not another `if` chain.                                                                                         |
+| Adapter                                | `shared/lib/http.ts` (fetch + ProblemDetail → `ApiError`, CSRF header); `shared/map/geojson.ts` (GeoJSON ↔ OpenLayers features)                              | Domains depend on a small typed API instead of `fetch` and OpenLayers details.                                                                                    |
+| Exception translation                  | Semantic bases in `shared` (`ConflictException`, …) mapped once by `ApiExceptionHandler`                                                                     | Business code never mentions HTTP; a new error is a subclass, not a new handler (ADR 0006).                                                                       |
+
+**SOLID, in this code base:**
+
+- **Single responsibility.** Each layer has one job (`web` translates HTTP, `service` runs a use case in a transaction, `persistence` stores). Within them: `PlotGeometryValidator` only validates, `GeoJsonMapper` only converts. On the frontend each hook owns one feature (`usePlotRegistration`, `usePlotSearch`, `usePlotReservation`…), and `useMapPage` only composes them.
+- **Open/closed.** The error mapping is closed to modification and open to extension through the exception hierarchy. The plot layer takes any style function (`styleByLook`), so the price colours were added without changing `useVectorLayer`.
+- **Liskov substitution.** Inheritance is rare on purpose. Where it exists, every module exception is handled through its semantic base, and `UserAccount` is a full `UserDetails` for Spring Security.
+- **Interface segregation.** Modules expose the minimum: `identity` exposes `CurrentUser` (an id) and nothing else; each frontend domain exports a short `index.ts`; the summary query returns a projection (`PlotSummaryView`) with only the figures it needs.
+- **Dependency inversion.** Services depend on repository interfaces that Spring Data implements, and controllers receive their collaborators by constructor injection. `CurrentUser` is a concrete class rather than an interface: there is one implementation, and the module boundary, not an extra abstraction, is what keeps `plot` independent of `identity`'s internals.
+
+**Left out on purpose:** hexagonal ports and adapters for every dependency, a state-machine library, MapStruct, and an event bus between modules. Each would add structure without solving a problem this code has today (ADR 0002).
 
 ## 5. Data
 
