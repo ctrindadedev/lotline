@@ -23,7 +23,7 @@ export const messages = {
     idle: 'Arraste e dê zoom no mapa para explorar. Use a barra de ferramentas para anunciar um terreno ou buscar numa área.',
     drawingPlot:
       'Clique no mapa para marcar os cantos do terreno. Dê um duplo clique para terminar.',
-    drawingSearch: 'Clique no centro da área e clique de novo para definir o raio.',
+    drawingSearch: 'Pressione no centro da área e arraste para definir o raio; solte para buscar.',
     editingPlot: 'Preencha os dados do terreno que você desenhou.',
     searching: 'Mostrando só os terrenos que alcançam o círculo. Refine com os filtros.',
   },
