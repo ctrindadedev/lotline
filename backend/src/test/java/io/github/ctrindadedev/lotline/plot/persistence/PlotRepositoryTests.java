@@ -46,6 +46,18 @@ class PlotRepositoryTests {
   }
 
   @Test
+  void theListOfAUsersPlotsCanUseTheOwnerAndBuyerIndexes() {
+    jdbcTemplate.execute("SET LOCAL enable_seqscan = off");
+    String id = "'01a11409-f080-7633-8c2f-bdf19205b48e'";
+
+    List<Map<String, Object>> plan =
+        jdbcTemplate.queryForList(
+            "EXPLAIN SELECT * FROM plots WHERE owner_id = %1$s OR buyer_id = %1$s".formatted(id));
+
+    assertThat(plan.toString()).contains("plots_owner_id_idx", "plots_buyer_id_idx");
+  }
+
+  @Test
   void radiusSearchCanUseTheGeographyIndex() {
     // A tiny table is seq-scanned anyway; forbid it to see whether the index is usable at all
     jdbcTemplate.execute("SET LOCAL enable_seqscan = off");
