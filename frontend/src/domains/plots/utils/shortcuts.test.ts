@@ -37,6 +37,7 @@ describe('shortcutFor', () => {
     ['Esc cancels a plot drawing', ESC, 'drawingPlot', false, 'cancel'],
     ['Esc cancels a circle drawing', ESC, 'drawingSearch', false, 'cancel'],
     ['Esc leaves a search', ESC, 'searching', false, 'cancel'],
+    ['Esc closes a result before leaving the search', ESC, 'searching', true, 'closeDetails'],
     ['Esc closes the plot details', ESC, 'idle', true, 'closeDetails'],
     ['Esc does nothing when idle', ESC, 'idle', false, null],
     ['Esc keeps a plot whose form is open', ESC, 'editingPlot', false, null],

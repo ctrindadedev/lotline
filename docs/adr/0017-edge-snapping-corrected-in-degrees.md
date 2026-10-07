@@ -12,7 +12,8 @@ Plots that share a border are allowed; an overlap above 1 m² is rejected with `
 ## Decision
 
 - Polygons snap with OpenLayers' `Snap` to the plots on the map, added after the `Draw` interaction. Circles do not snap.
-- When the polygon is finished, before rounding to 7 decimals, every vertex within `1e-5` degrees (about 1.1 m) of a neighbour's edge is moved to the closest point of that edge, computed in longitude/latitude. A vertex on a neighbour's corner stays on that corner.
+- When the polygon is finished, its vertices are rounded to 7 decimals (about 1 cm). Then every vertex within `1e-5` degrees (about 1.1 m) of a neighbour's edge is moved to the closest point of that edge, computed in longitude/latitude. A vertex on a neighbour's corner stays on that corner.
+- **Snapped vertices are not rounded.** A point in the middle of a slanted edge is rarely on the 7-decimal grid, and rounding it would move it up to about 8 mm off the edge: on a long shared border, enough for a sliver above the overlap tolerance (ADR 0008) and a `409`.
 - The tolerance is a few times the largest offset Web Mercator can introduce on a plot-sized edge, and small enough not to move a vertex the user placed on purpose.
 
 ## Alternatives considered

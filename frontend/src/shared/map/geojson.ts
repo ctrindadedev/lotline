@@ -44,13 +44,13 @@ export function toOlFeatures(collection: GeoJsonFeatureCollection<object>): Feat
 const DECIMALS = 7;
 
 /**
- * A drawn polygon in degrees, with vertices that touch a neighbour's edge moved onto it, rounded
- * to 7 decimals (about 1 cm, finer than any hand-drawn vertex).
+ * A drawn polygon in degrees, rounded to 7 decimals (about 1 cm, finer than any hand-drawn
+ * vertex), with vertices that touch a neighbour's edge then moved exactly onto it.
  */
 export function toGeoJsonPolygon(polygon: Polygon, neighbours: Polygon[] = []): GeoJsonPolygon {
-  const drawn = toDegrees(onMainWorld(polygon));
-  const snapped = snapRingsToEdges(drawn, neighbours.map(toDegrees));
-  return { type: 'Polygon', coordinates: snapped.map((ring) => ring.map(roundPosition)) };
+  const drawn = toDegrees(onMainWorld(polygon)).map((ring) => ring.map(roundPosition));
+  // Snap after rounding: rounding a snapped vertex would move it off a slanted edge (ADR 0017).
+  return { type: 'Polygon', coordinates: snapRingsToEdges(drawn, neighbours.map(toDegrees)) };
 }
 
 function toDegrees(polygon: Polygon): Position[][] {

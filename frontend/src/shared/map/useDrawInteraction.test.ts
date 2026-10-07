@@ -187,8 +187,11 @@ describe('useDrawInteraction', () => {
       ),
     );
 
-    const [corner] = onPolygon.mock.calls[0][0].coordinates[0];
-    expect(corner).toEqual([-46.995, -22.0045]);
+    const [[lng, lat]] = onPolygon.mock.calls[0][0].coordinates[0];
+    const offEdge = (lng + 47) * -0.009 - (lat + 22) * 0.01;
+    expect(Math.abs(offEdge)).toBeLessThan(1e-15);
+    expect(lng).toBeCloseTo(-46.995, 6);
+    expect(lat).toBeCloseTo(-22.0045, 6);
   });
 
   it('removes the last corner of the drawing on undo, and does nothing without one', () => {
