@@ -5,7 +5,7 @@ import Polygon from 'ol/geom/Polygon';
 import { fromLonLat } from 'ol/proj';
 import type Style from 'ol/style/Style';
 import { describe, expect, it } from 'vitest';
-import { polygonStyle, reservedPolygonStyle, sketchLabelStyle, styleByProperty } from './styles';
+import { polygonLookStyle, sketchLabelStyle, styleByLook, type PolygonLook } from './styles';
 
 function labelOf(styles: Style[]) {
   return styles.at(-1)?.getText()?.getText();
@@ -45,12 +45,16 @@ describe('sketchLabelStyle', () => {
   });
 });
 
-describe('styleByProperty', () => {
-  it('styles a feature by one of its properties, with a fallback', () => {
-    const style = styleByProperty('status', { RESERVED: reservedPolygonStyle }, polygonStyle);
+describe('styleByLook', () => {
+  const look: PolygonLook = { stroke: '#000', fill: 'rgb(0 0 0 / 10%)', width: 2, dashed: true };
 
-    expect(style(new Feature({ status: 'RESERVED' }))).toBe(reservedPolygonStyle);
-    expect(style(new Feature({ status: 'AVAILABLE' }))).toBe(polygonStyle);
-    expect(style(new Feature())).toBe(polygonStyle);
+  it('styles each feature from its properties and id, sharing one style per look', () => {
+    const style = styleByLook((_properties, id) => ({ ...look, width: id === 'a' ? 4 : 2 }));
+    const a = new Feature({ status: 'SOLD' });
+    a.setId('a');
+
+    expect(style(a).getStroke()?.getWidth()).toBe(4);
+    expect(style(a).getStroke()?.getLineDash()).toEqual([8, 5]);
+    expect(style(new Feature())).toBe(polygonLookStyle(look));
   });
 });

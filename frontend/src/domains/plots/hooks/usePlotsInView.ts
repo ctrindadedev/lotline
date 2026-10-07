@@ -8,6 +8,7 @@ export const plotKeys = {
   all: ['plots'] as const,
   inBoundingBox: (bbox: readonly number[] | undefined) => ['plots', 'bbox', bbox] as const,
   search: (search: object | null) => ['plots', 'search', search] as const,
+  mine: (userId: string | null) => ['plots', 'mine', userId] as const,
 };
 
 export function usePlotsInView(viewport: MapViewport | null) {

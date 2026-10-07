@@ -6,7 +6,7 @@ import { fromLonLat } from 'ol/proj';
 import VectorSource from 'ol/source/Vector';
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import type { PlotFeature, PlotFeatureCollection } from '../types';
+import type { PlotFeature } from '../types';
 import { usePlotDetails } from './usePlotDetails';
 
 const CORNERS: [number, number][] = [
@@ -33,7 +33,6 @@ const PLOT: PlotFeature = {
   },
 };
 
-const LOADED: PlotFeatureCollection = { type: 'FeatureCollection', features: [PLOT] };
 const INSIDE = fromLonLat([-46.995, -21.995]);
 
 function setUp() {
@@ -42,7 +41,7 @@ function setUp() {
   feature.setId('plot-1');
   const source = new VectorSource({ features: [feature] });
   const hook = renderHook(({ plots, enabled }) => usePlotDetails(map, source, plots, enabled), {
-    initialProps: { plots: LOADED as PlotFeatureCollection | undefined, enabled: true },
+    initialProps: { plots: [PLOT] as PlotFeature[], enabled: true },
   });
   const click = () =>
     act(() => {
@@ -69,10 +68,10 @@ describe('usePlotDetails', () => {
     const { map, click, result, rerender } = setUp();
     click();
 
-    rerender({ plots: undefined, enabled: true });
+    rerender({ plots: [], enabled: true });
     expect(result.current.plot).toBeNull();
 
-    rerender({ plots: LOADED, enabled: true });
+    rerender({ plots: [PLOT], enabled: true });
     expect(result.current.plot).toBeNull();
     expect(map.getOverlays().item(0).getPosition()).toBeUndefined();
   });
@@ -81,10 +80,21 @@ describe('usePlotDetails', () => {
     const { click, result, rerender } = setUp();
     click();
 
-    rerender({ plots: LOADED, enabled: false });
+    rerender({ plots: [PLOT], enabled: false });
     expect(result.current.plot).toBeNull();
 
-    rerender({ plots: LOADED, enabled: true });
+    rerender({ plots: [PLOT], enabled: true });
     expect(result.current.plot).toBeNull();
+  });
+
+  it('opens a plot picked from a list, pointing inside it, and fits the map to it', () => {
+    const { map, result } = setUp();
+
+    act(() => result.current.select(PLOT));
+
+    expect(result.current.plot).toBe(PLOT);
+    const [x] = map.getView().getCenter()!;
+    const [cx] = fromLonLat([-46.995, -21.995]);
+    expect(Math.abs(x - cx)).toBeLessThan(50);
   });
 });

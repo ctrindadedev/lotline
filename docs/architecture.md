@@ -97,6 +97,7 @@ flowchart TB
 | `GET /plots?bbox=minLng,minLat,maxLng,maxLat`                                                        | anyone                   | Plots that intersect the map viewport (ADR 0011)               |
 | `GET /plots/search?lat&lng&radiusMeters[&minPrice&maxPrice&minAreaSquareMeters&maxAreaSquareMeters]` | anyone                   | Plots that reach into a circle, closest first (ADR 0010, 0012) |
 | `GET /plots/{id}`                                                                                    | anyone                   | One plot                                                       |
+| `GET /plots/mine`                                                                                    | logged in                | The user's listings and reservations, newest first             |
 | `POST /plots`                                                                                        | logged in                | List a plot; the user becomes its owner (ADR 0019)             |
 | `PUT /plots/{id}`, `DELETE /plots/{id}`                                                              | owner, while available   | Change price, description, contact; remove                     |
 | `POST /plots/{id}/reservation`                                                                       | logged in, not the owner | Reserve (ADR 0021)                                             |
@@ -132,6 +133,7 @@ flowchart TB
 
 - **By domain**, like the backend's modules. Each domain exports its public API from `index.ts`; another domain imports only from there.
 - **One orchestrating hook per page.** `MapPage` renders what `useMapPage` returns; `useMapPage` only composes feature hooks.
+- **The side panel lists plots as cards**: the plots in view for everyone, plus the user's listings and reservations once logged in. The tab is a URL parameter (`?panel=mine`), so the account menu links to it. Picking a card fits the map to the plot and opens its details; the selected plot is a flag on the OpenLayers feature that the layer's style reads.
 - **Server state in TanStack Query** over a small typed `fetch` client. Mutations invalidate the plot queries; logging in or out refetches everything that depends on the user.
 - **OpenLayers stays in `shared/map`.** Projection EPSG:3857 on the map, EPSG:4326 in data, converted only at the GeoJSON boundary; distances and areas are geodesic (`ol/sphere`).
 - MUI for components, CSS Modules for page layout (ADR 0013); react-hook-form with plain validation functions (ADR 0015); all user-facing text in one Brazilian Portuguese catalog (ADR 0016).

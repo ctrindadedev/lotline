@@ -35,6 +35,8 @@ public interface PlotRepository extends JpaRepository<Plot, UUID> {
           CAST(ST_SetSRID(ST_MakePoint(:lng, :lat), 4326) AS geography)), p.id
       """;
 
+  List<Plot> findByOwnerIdOrBuyerIdOrderByCreatedAtDesc(UUID ownerId, UUID buyerId);
+
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("SELECT p FROM Plot p WHERE p.id = :id")
   Optional<Plot> findByIdForUpdate(@Param("id") UUID id);

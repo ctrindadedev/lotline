@@ -1,6 +1,7 @@
 import CloseIcon from '@mui/icons-material/Close';
+import ContactMailOutlined from '@mui/icons-material/ContactMailOutlined';
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import Link from '@mui/material/Link';
@@ -17,17 +18,11 @@ import {
 import { messages } from '../../../shared/i18n/messages';
 import { polygonAreaSquareMeters } from '../../../shared/map/geodesy';
 import type { AuthRedirect } from '../../auth';
-import type { PlotFeature, PlotStatus } from '../types';
-import { describeStatus } from '../utils/reservation';
+import type { PlotFeature } from '../types';
+import { StatusChip } from './StatusChip';
 
 const text = messages.popup;
 const SEE_CONTACT: AuthRedirect = { from: '/', reason: 'seeContact' };
-
-const STATUS_COLOR: Record<PlotStatus, 'success' | 'warning' | 'default'> = {
-  AVAILABLE: 'success',
-  RESERVED: 'warning',
-  SOLD: 'default',
-};
 
 export interface PlotPopupAction {
   label: string;
@@ -43,8 +38,21 @@ interface PlotPopupProps {
   busy?: boolean;
 }
 
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <Typography variant="caption" color="text.secondary" component="dt">
+        {label}
+      </Typography>
+      <Typography variant="body2" component="dd" sx={{ m: 0, fontWeight: 500 }}>
+        {value}
+      </Typography>
+    </div>
+  );
+}
+
 export function PlotPopup({ plot, onClose, actions = [], busy = false }: PlotPopupProps) {
-  const { price, description, contact, createdAt, status } = plot.properties;
+  const { price, description, contact, createdAt } = plot.properties;
   const area = polygonAreaSquareMeters(plot.geometry);
 
   return (
@@ -52,62 +60,71 @@ export function PlotPopup({ plot, onClose, actions = [], busy = false }: PlotPop
       elevation={6}
       role="dialog"
       aria-label={text.label}
-      sx={{ width: 300, maxWidth: '80vw', p: 2 }}
+      sx={{ width: 320, maxWidth: '80vw', overflow: 'hidden' }}
     >
-      <Stack direction="row" sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
-        <div>
-          <Typography variant="h6" component="p">
-            {formatPrice(price)}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {formatArea(area)} · {formatPricePerSquareMeter(price, area)}
-          </Typography>
-        </div>
-        <IconButton
-          aria-label={text.close}
-          size="small"
-          onClick={onClose}
-          sx={{ mt: -0.5, mr: -1 }}
-        >
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </Stack>
-      <Chip
-        size="small"
-        color={STATUS_COLOR[status]}
-        label={describeStatus(plot.properties)}
-        sx={{ mt: 1 }}
-      />
-      <Divider sx={{ my: 1.5 }} />
-      <Typography variant="body2" sx={{ whiteSpace: 'pre-line', mb: 1.5 }}>
-        {description}
-      </Typography>
-      <Typography variant="body2">
-        <strong>{text.contact}</strong>{' '}
-        {contact ?? (
-          <Link component={RouterLink} to="/login" state={SEE_CONTACT}>
-            {text.contactHidden}
-          </Link>
-        )}
-      </Typography>
-      <Typography variant="caption" color="text.secondary">
-        {text.listedOn(formatDate(createdAt))}
-      </Typography>
-      {actions.length > 0 && (
-        <Stack direction="row" sx={{ mt: 1.5, flexWrap: 'wrap', gap: 1 }}>
-          {actions.map((action, index) => (
-            <Button
-              key={action.label}
-              size="small"
-              variant={index === 0 ? 'outlined' : 'text'}
-              color={action.color ?? 'primary'}
-              disabled={busy}
-              onClick={action.onClick}
-            >
-              {action.label}
-            </Button>
-          ))}
+      <Box sx={{ px: 2, pt: 1.5, pb: 1.5 }}>
+        <Stack direction="row" sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <Stack spacing={0.75} sx={{ alignItems: 'flex-start' }}>
+            <Typography variant="h6" component="p" sx={{ lineHeight: 1.2 }}>
+              {formatPrice(price)}
+            </Typography>
+            <StatusChip plot={plot.properties} />
+          </Stack>
+          <IconButton aria-label={text.close} size="small" onClick={onClose} sx={{ mr: -1 }}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
         </Stack>
+        <Box
+          component="dl"
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, auto)',
+            justifyContent: 'space-between',
+            columnGap: 2,
+            my: 1.5,
+            '& dd': { whiteSpace: 'nowrap' },
+          }}
+        >
+          <Fact label={text.area} value={formatArea(area)} />
+          <Fact label={text.pricePerSquareMeter} value={formatPricePerSquareMeter(price, area)} />
+          <Fact label={text.listed} value={formatDate(createdAt)} />
+        </Box>
+        <Typography variant="body2" sx={{ whiteSpace: 'pre-line', mb: 1.5 }}>
+          {description}
+        </Typography>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <ContactMailOutlined fontSize="small" color="action" aria-hidden />
+          <Typography variant="body2">
+            <strong>{text.contact}</strong>{' '}
+            {contact ?? (
+              <Link component={RouterLink} to="/login" state={SEE_CONTACT}>
+                {text.contactHidden}
+              </Link>
+            )}
+          </Typography>
+        </Stack>
+      </Box>
+      {actions.length > 0 && (
+        <>
+          <Divider />
+          <Stack
+            direction="row"
+            sx={{ px: 2, py: 1, flexWrap: 'wrap', gap: 1, bgcolor: 'action.hover' }}
+          >
+            {actions.map((action, index) => (
+              <Button
+                key={action.label}
+                size="small"
+                variant={index === 0 ? 'contained' : 'text'}
+                color={action.color ?? 'primary'}
+                disabled={busy}
+                onClick={action.onClick}
+              >
+                {action.label}
+              </Button>
+            ))}
+          </Stack>
+        </>
       )}
     </Paper>
   );

@@ -1,3 +1,4 @@
+import TerrainOutlined from '@mui/icons-material/TerrainOutlined';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
@@ -19,9 +20,22 @@ export function Layout({ children }: { children: ReactNode }) {
           <Typography
             variant="h6"
             component="h1"
-            sx={{ flexGrow: 1, '& a': { color: 'inherit', textDecoration: 'none' } }}
+            sx={{
+              flexGrow: 1,
+              fontWeight: 700,
+              '& a': {
+                color: 'inherit',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1,
+              },
+            }}
           >
-            <RouterLink to="/">Lotline</RouterLink>
+            <RouterLink to="/">
+              <TerrainOutlined color="primary" aria-hidden />
+              Lotline
+            </RouterLink>
           </Typography>
           <AccountMenu />
         </Toolbar>

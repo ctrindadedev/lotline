@@ -2,7 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { messages } from '../../../shared/i18n/messages';
 import { createTestQueryClient } from '../../../test/queryClient';
 import { AccountMenu } from './AccountMenu';
@@ -19,13 +19,22 @@ function problem(status: number, body: object = {}) {
   );
 }
 
+function MapStub() {
+  return (
+    <>
+      <p>map</p>
+      <p data-testid="search">{useLocation().search}</p>
+    </>
+  );
+}
+
 function renderAt(path: string, state?: object) {
   render(
     <QueryClientProvider client={createTestQueryClient()}>
       <MemoryRouter initialEntries={[{ pathname: path, state }]}>
         <AccountMenu />
         <Routes>
-          <Route path="/" element={<p>map</p>} />
+          <Route path="/" element={<MapStub />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
         </Routes>
@@ -57,7 +66,15 @@ describe('login and registration', () => {
     await userEvent.click(screen.getByRole('button', { name: text.logIn.submit }));
 
     await waitFor(() => expect(screen.getByText('map')).toBeInTheDocument());
+    await userEvent.click(screen.getByRole('button', { name: text.menu.open }));
     expect(screen.getByText(text.menu.greeting('Ana'))).toBeInTheDocument();
+    expect(screen.getByText('ana@example.com')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('menuitem', { name: text.menu.myListings }));
+    expect(screen.getByTestId('search')).toHaveTextContent('?panel=mine');
+    await userEvent.click(screen.getByRole('button', { name: text.menu.open }));
+    await userEvent.click(screen.getByRole('menuitem', { name: text.menu.myReservations }));
+    expect(screen.getByTestId('search')).toHaveTextContent('?panel=reserved');
   });
 
   it('says when the email or the password is wrong', async () => {
@@ -131,7 +148,8 @@ describe('login and registration', () => {
     await userEvent.click(screen.getByRole('link', { name: text.menu.logIn }));
     expect(screen.getByRole('button', { name: text.logIn.submit })).toBeInTheDocument();
 
-    await userEvent.click(await screen.findByRole('button', { name: text.menu.logOut }));
+    await userEvent.click(await screen.findByRole('button', { name: text.menu.open }));
+    await userEvent.click(screen.getByRole('menuitem', { name: text.menu.logOut }));
     await waitFor(() =>
       expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith('/auth/logout'))).toBe(true),
     );

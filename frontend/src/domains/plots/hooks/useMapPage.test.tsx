@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CircleArea } from '../../../shared/map/geodesy';
 import type { GeoJsonPolygon } from '../../../shared/map/geojson';
+import { useSearchParams } from 'react-router';
 import { createQueryWrapper } from '../../../test/queryClient';
 import { EMPTY_PLOT_FORM } from '../utils/plotForm';
 import { useMapPage } from './useMapPage';
@@ -51,6 +52,10 @@ const { plotDrawn, circleDrawn, closeDetails, detailsArgs, detailsPlot, undoLast
     detailsArgs: { plots: undefined as unknown, enabled: false },
   }));
 
+vi.mock('./useMyPlots', () => ({
+  useMyPlots: () => ({ plots: [], listed: [], reserved: [], isLoading: false, error: null }),
+}));
+
 vi.mock('./usePlotDetails', () => ({
   usePlotDetails: (_map: unknown, _source: unknown, plots: unknown, enabled: boolean) => {
     detailsArgs.plots = plots;
@@ -58,6 +63,7 @@ vi.mock('./usePlotDetails', () => ({
     return {
       plot: detailsPlot.current,
       overlayElement: document.createElement('div'),
+      select: vi.fn<() => void>(),
       close: closeDetails,
     };
   },
@@ -201,7 +207,7 @@ describe('useMapPage', () => {
 
     expect(result.current.mode).toBe('searching');
     expect(result.current.searchPanel!.radius).toBe('1,5 km');
-    await waitFor(() => expect(detailsArgs.plots).toEqual(results));
+    await waitFor(() => expect(detailsArgs.plots).toEqual(results.features));
     expect(detailsArgs.enabled).toBe(true);
 
     act(() => result.current.searchPanel!.newSearch());
@@ -336,5 +342,47 @@ describe('useMapPage', () => {
     detailsPlot.current = { ...plot, properties: { ...plot.properties, ownedByMe: true } };
     expect(labels()).toEqual([messages.popup.edit, messages.popup.delete]);
     detailsPlot.current = null;
+  });
+
+  it('leaves a search when the account menu asks for a tab of the plot list', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
+      Response.json({ type: 'FeatureCollection', features: [] }),
+    );
+    const { result } = renderHook(() => ({ page: useMapPage(), setParams: useSearchParams()[1] }), {
+      wrapper: createQueryWrapper(),
+    });
+    act(() => result.current.page.toolbar.drawSearch());
+    act(() => circleDrawn.current!({ center: [-47.06, -22.9], radiusMeters: 1500 }));
+    expect(result.current.page.mode).toBe('searching');
+
+    act(() => result.current.setParams({ panel: 'mine' }));
+
+    await waitFor(() => expect(result.current.page.mode).toBe('idle'));
+    expect(result.current.page.plotsPanel.tab).toBe('mine');
+  });
+
+  it('keeps a filled-in plot form when the account menu asks for a tab', async () => {
+    const { result } = renderHook(() => ({ page: useMapPage(), setParams: useSearchParams()[1] }), {
+      wrapper: createQueryWrapper(),
+    });
+    act(() => result.current.page.toolbar.drawPlot());
+    act(() =>
+      plotDrawn.current!({
+        type: 'Polygon',
+        coordinates: [
+          [
+            [-47, -22],
+            [-46.99, -22],
+            [-46.99, -21.99],
+            [-47, -22],
+          ],
+        ],
+      }),
+    );
+    expect(result.current.page.mode).toBe('editingPlot');
+
+    act(() => result.current.setParams({ panel: 'reserved' }));
+
+    expect(result.current.page.mode).toBe('editingPlot');
   });
 });

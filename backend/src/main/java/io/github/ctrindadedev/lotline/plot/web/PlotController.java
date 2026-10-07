@@ -67,6 +67,14 @@ class PlotController {
     return ResponseEntity.created(location).body(toFeature(plot));
   }
 
+  @Operation(
+      summary = "The logged-in user's plots: listed by them or reserved (or bought) by them",
+      description = "Newest first.")
+  @GetMapping("/mine")
+  GeoJsonFeatureCollection<PlotProperties> listMine() {
+    return toFeatureCollection(plotService.listOwnedOrReservedBy(currentUser.requireId()));
+  }
+
   @Operation(summary = "Get a plot by id")
   @GetMapping("/{id}")
   GeoJsonFeature<PlotProperties> findById(@PathVariable UUID id) {
