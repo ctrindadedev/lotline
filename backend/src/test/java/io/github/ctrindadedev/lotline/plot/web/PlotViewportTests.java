@@ -78,7 +78,25 @@ class PlotViewportTests {
             jsonPath("$.errors[0].message")
                 .value(
                     "must be minLng,minLat,maxLng,maxLat in degrees, in range,"
-                        + " with each min below its max"));
+                        + " with each min below its max, at most 3 degrees wide and tall"));
+  }
+
+  @Test
+  void acceptsABoxThreeDegreesWideAndTall() throws Exception {
+    list("-48.5,-23.5,-45.5,-20.5").andExpect(status().isOk());
+  }
+
+  @Test
+  void rejectsTheWholeWorld() throws Exception {
+    list("-180,-90,180,90")
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.errors[0].field").value("bbox"));
+  }
+
+  @Test
+  void rejectsABoxJustWiderOrTallerThanThreeDegrees() throws Exception {
+    list("-48.5,-23.5,-45.4999,-20.5").andExpect(status().isBadRequest());
+    list("-48.5,-23.5,-45.5,-20.4999").andExpect(status().isBadRequest());
   }
 
   private ResultActions list(String bbox) throws Exception {

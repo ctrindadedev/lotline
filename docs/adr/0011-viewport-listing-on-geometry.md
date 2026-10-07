@@ -22,5 +22,5 @@ The map shows the plots in its visible area and reloads them when the user pans 
 
 ## Consequences
 
-- The response is not capped. A viewport zoomed out to a continent returns every plot in it. The frontend should only load plots from a minimum zoom level, and pagination or clustering can come later if the data grows.
+- ~~The response is not capped.~~ Amended in #93: the box is at most 3 degrees wide and tall (`400` otherwise), for this endpoint and for `GET /plots/summary`. Without it an anonymous request for the whole world returned, or aggregated, every plot, while the radius search was already capped at 50 km. The frontend only loads plots from zoom 12, where even an 8K screen spans about 2.6 degrees, so the app never reaches the cap. Pagination or clustering can come later if a 3-degree box ever holds too many plots.
 - Plots are stored with straight lon/lat edges and rendered with straight 3857 edges. For plot-sized shapes the difference is far below a pixel.

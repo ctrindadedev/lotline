@@ -7,6 +7,9 @@ import java.util.Objects;
 
 class BoundingBoxValidator implements ConstraintValidator<BoundingBox, List<Double>> {
 
+  /** Wider than any viewport at the frontend's minimum zoom, even on an 8K screen (ADR 0011). */
+  static final double MAX_SPAN_DEGREES = 3;
+
   @Override
   public boolean isValid(List<Double> bbox, ConstraintValidatorContext context) {
     if (bbox == null) {
@@ -22,6 +25,8 @@ class BoundingBoxValidator implements ConstraintValidator<BoundingBox, List<Doub
         && maxLng <= 180
         && -90 <= minLat
         && minLat < maxLat
-        && maxLat <= 90;
+        && maxLat <= 90
+        && maxLng - minLng <= MAX_SPAN_DEGREES
+        && maxLat - minLat <= MAX_SPAN_DEGREES;
   }
 }
