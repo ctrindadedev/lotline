@@ -15,23 +15,39 @@ export const polygonStyle = new Style({
   stroke: new Stroke({ color: '#1f6feb', width: 2 }),
 });
 
-export const reservedPolygonStyle = new Style({
-  fill: new Fill({ color: 'rgb(191 135 0 / 25%)' }),
-  stroke: new Stroke({ color: '#bf8700', width: 2 }),
-});
+/** How a polygon is drawn: stroke and fill colours, stroke width, solid or dashed. */
+export interface PolygonLook {
+  stroke: string;
+  fill: string;
+  width: number;
+  dashed: boolean;
+}
 
-export const soldPolygonStyle = new Style({
-  fill: new Fill({ color: 'rgb(110 119 129 / 30%)' }),
-  stroke: new Stroke({ color: '#6e7781', width: 2 }),
-});
+const looks = new Map<string, Style>();
 
-/** Picks a feature's style by one of its properties, falling back to `fallback`. */
-export function styleByProperty(
-  key: string,
-  styles: Record<string, Style>,
-  fallback: Style,
+/** One shared `Style` per look, so a style function does not allocate on every render. */
+export function polygonLookStyle(look: PolygonLook): Style {
+  const key = `${look.stroke}|${look.fill}|${look.width}|${look.dashed}`;
+  let style = looks.get(key);
+  if (!style) {
+    style = new Style({
+      fill: new Fill({ color: look.fill }),
+      stroke: new Stroke({
+        color: look.stroke,
+        width: look.width,
+        lineDash: look.dashed ? [8, 5] : undefined,
+      }),
+    });
+    looks.set(key, style);
+  }
+  return style;
+}
+
+/** A style function that picks each feature's look from its properties and id. */
+export function styleByLook(
+  lookOf: (properties: Record<string, unknown>, id: string | number | undefined) => PolygonLook,
 ): (feature: FeatureLike) => Style {
-  return (feature) => styles[String(feature.get(key))] ?? fallback;
+  return (feature) => polygonLookStyle(lookOf(feature.getProperties(), feature.getId()));
 }
 
 export const draftStyle = new Style({

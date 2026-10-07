@@ -1,15 +1,10 @@
+import { useEffect, useEffectEvent, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { useCurrentUser, type AuthRedirect } from '../../auth';
 import { isTyping, useKeyDown } from '../../../shared/hooks/useKeyDown';
 import { messages } from '../../../shared/i18n/messages';
-import {
-  draftStyle,
-  polygonStyle,
-  reservedPolygonStyle,
-  searchAreaStyle,
-  soldPolygonStyle,
-  styleByProperty,
-} from '../../../shared/map/styles';
+import { draftStyle, searchAreaStyle, styleByLook } from '../../../shared/map/styles';
+import { SELECTED, useSelectedFeature } from '../../../shared/map/useSelectedFeature';
 import { useDrawInteraction } from '../../../shared/map/useDrawInteraction';
 import { useMap } from '../../../shared/map/useMap';
 import { useMapViewport } from '../../../shared/map/useMapViewport';
@@ -23,13 +18,14 @@ import { usePlotManagement } from './usePlotManagement';
 import { usePlotRegistration } from './usePlotRegistration';
 import { usePlotReservation } from './usePlotReservation';
 import { usePlotSearch } from './usePlotSearch';
-import { usePlotsInView } from './usePlotsInView';
+import { MIN_PLOTS_ZOOM, usePlotsInView } from './usePlotsInView';
 import type { PlotPopupAction } from '../components/PlotPopup';
+import type { PlotFeature, PlotProperties } from '../types';
+import { plotLook } from '../utils/plotLook';
+import { usePlotsPanel } from './usePlotsPanel';
 
-const plotStyle = styleByProperty(
-  'status',
-  { RESERVED: reservedPolygonStyle, SOLD: soldPolygonStyle },
-  polygonStyle,
+const plotStyle = styleByLook((properties) =>
+  plotLook(properties as unknown as PlotProperties, properties[SELECTED] === true),
 );
 
 export function useMapPage() {
@@ -44,11 +40,20 @@ export function useMapPage() {
   const { mode } = interaction;
   const searching = mode === 'searching';
   const shownPlots = searching ? search.results : plotsInView.plots;
+  const panel = usePlotsPanel(plotsInView.plots?.features ?? [], user?.id ?? null);
 
   useVectorLayer(map, search.circle, searchAreaStyle);
   const plotsSource = useVectorLayer(map, shownPlots, plotStyle);
   useVectorLayer(map, registration.draft, draftStyle);
-  const details = usePlotDetails(map, plotsSource, shownPlots, mode === 'idle' || searching);
+  const details = usePlotDetails(
+    map,
+    plotsSource,
+    [...(shownPlots?.features ?? []), ...panel.myPlots],
+    mode === 'idle' || searching,
+    MIN_PLOTS_ZOOM,
+  );
+  const selectedId = details.plot?.id ?? null;
+  useSelectedFeature(plotsSource, selectedId, shownPlots);
   const management = usePlotManagement(details.plot);
   const reservation = usePlotReservation(details.plot);
   const popupActions: PlotPopupAction[] = [
@@ -77,6 +82,21 @@ export function useMapPage() {
   }
 
   const cancel = () => leaveFor(registration.cancel);
+
+  // The account menu links to a tab of the plot list, which only shows in idle mode. A filled-in
+  // plot form stays: its typed values would be lost.
+  const showRequestedPanel = useEffectEvent(() => {
+    if (mode !== 'idle' && mode !== 'editingPlot') {
+      cancel();
+    }
+  });
+  const lastPanelRequest = useRef(panel.requested);
+  useEffect(() => {
+    if (lastPanelRequest.current !== panel.requested) {
+      lastPanelRequest.current = panel.requested;
+      showRequestedPanel();
+    }
+  }, [panel.requested]);
 
   useKeyDown((event) => {
     const action = shortcutFor(
@@ -133,8 +153,19 @@ export function useMapPage() {
       ...search.panel,
       newSearch: () => leaveFor(interaction.drawSearch),
     },
+    plotsPanel: {
+      tab: panel.tab,
+      tabs: panel.tabs,
+      selectTab: panel.selectTab,
+      plots: panel.plots,
+      myPlotsLoading: panel.myPlotsLoading,
+      myPlotsFailed: panel.myPlotsFailed,
+    },
+    searchResults: search.results?.features ?? [],
     details: {
       plot: details.plot,
+      selectedId,
+      select: (plot: PlotFeature) => details.select(plot),
       overlayElement: details.overlayElement,
       close: details.close,
       actions: popupActions,

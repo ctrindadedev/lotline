@@ -39,10 +39,11 @@ describe('PlotPopup', () => {
     const popup = screen.getByRole('dialog', { name: messages.popup.label });
 
     expect(popup).toHaveTextContent('R$ 150.000,00');
-    expect(popup).toHaveTextContent('1,15 ha · R$ 13,08/m²');
+    expect(popup).toHaveTextContent(`${messages.popup.area}1,15 ha`);
+    expect(popup).toHaveTextContent(`${messages.popup.pricePerSquareMeter}R$ 13,08/m²`);
     expect(popup).toHaveTextContent('Corner plot Near the park');
     expect(popup).toHaveTextContent(`${messages.popup.contact} +55 19 99999-0000`);
-    expect(popup).toHaveTextContent(messages.popup.listedOn('6 de out. de 2026'));
+    expect(popup).toHaveTextContent(`${messages.popup.listed}6 de out. de 2026`);
   });
 
   it('closes from its close button', async () => {

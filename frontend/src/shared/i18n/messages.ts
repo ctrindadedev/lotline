@@ -32,6 +32,19 @@ export const messages = {
     plotShortcuts: 'Atalhos: Esc cancela · Ctrl+Z desfaz o último ponto.',
     searchShortcuts: 'Atalho: Esc cancela.',
   },
+  plotsPanel: {
+    tabs: { area: 'Na área', mine: 'Meus anúncios', reserved: 'Minhas reservas' },
+    tabsLabel: 'Quais terrenos listar',
+    list: 'Terrenos',
+    loadingMine: 'Carregando seus terrenos…',
+    failedMine: 'Não foi possível carregar seus terrenos. Tente novamente em instantes.',
+    noneListed: 'Você ainda não anunciou terrenos. Use "Anunciar terreno" no mapa.',
+    noneReserved: 'Você ainda não reservou terrenos.',
+  },
+  legend: {
+    label: 'Legenda',
+    mine: 'Seu anúncio',
+  },
   plotsInView: {
     mapLoading: 'Carregando o mapa…',
     zoomIn: 'Aproxime o mapa para ver os terrenos desta área.',
@@ -80,7 +93,9 @@ export const messages = {
     close: 'Fechar',
     contact: 'Contato:',
     contactHidden: 'Entre para ver o contato',
-    listedOn: (date: string) => `Anunciado em ${date}`,
+    area: 'Área',
+    pricePerSquareMeter: 'Preço por m²',
+    listed: 'Anúncio',
     edit: 'Editar',
     delete: 'Excluir',
     status: { AVAILABLE: 'Disponível', RESERVED: 'Reservado', SOLD: 'Vendido' },
@@ -150,6 +165,9 @@ export const messages = {
   auth: {
     menu: {
       greeting: (name: string) => `Olá, ${name}`,
+      open: 'Abrir o menu da conta',
+      myListings: 'Meus anúncios',
+      myReservations: 'Minhas reservas',
       logIn: 'Entrar',
       register: 'Criar conta',
       logOut: 'Sair',

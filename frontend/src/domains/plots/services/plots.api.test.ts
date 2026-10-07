@@ -4,6 +4,7 @@ import {
   createPlot,
   deletePlot,
   getPlot,
+  listMyPlots,
   listPlotsInBoundingBox,
   releaseReservation,
   reservePlot,
@@ -138,5 +139,12 @@ describe('plots API', () => {
     respondWith(PLOT);
     await expect(sellPlot(PLOT.id)).resolves.toEqual(PLOT);
     expect(fetchMock.mock.calls[2][0]).toBe(`${url}/sale`);
+  });
+
+  it('lists the plots of the logged-in user', async () => {
+    respondWith({ type: 'FeatureCollection', features: [PLOT] });
+
+    await expect(listMyPlots()).resolves.toEqual({ type: 'FeatureCollection', features: [PLOT] });
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/v1/plots/mine');
   });
 });

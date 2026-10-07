@@ -22,6 +22,10 @@ export function searchPlots(
   return getJson('/plots/search', search, signal);
 }
 
+export function listMyPlots(signal?: AbortSignal): Promise<PlotFeatureCollection> {
+  return getJson('/plots/mine', undefined, signal);
+}
+
 export function getPlot(id: string): Promise<PlotFeature> {
   return getJson(`/plots/${encodeURIComponent(id)}`);
 }

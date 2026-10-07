@@ -93,6 +93,13 @@ public class PlotService {
   }
 
   @Transactional(readOnly = true)
+  public List<PlotDetails> listOwnedOrReservedBy(UUID userId) {
+    return plotRepository.findByOwnerIdOrBuyerIdOrderByCreatedAtDesc(userId, userId).stream()
+        .map(PlotDetails::from)
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
   public PlotDetails findById(UUID id) {
     return plotRepository
         .findById(id)

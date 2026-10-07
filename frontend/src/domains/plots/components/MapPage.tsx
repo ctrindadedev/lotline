@@ -6,11 +6,14 @@ import { createPortal } from 'react-dom';
 import { messages } from '../../../shared/i18n/messages';
 import { useMapPage } from '../hooks/useMapPage';
 import styles from './MapPage.module.css';
+import { MapLegend } from './MapLegend';
 import { MapToolbar } from './MapToolbar';
 import { ConfirmDialog } from './ConfirmDialog';
 import { EditPlotDialog } from './EditPlotDialog';
 import { PlotForm } from './PlotForm';
+import { PlotList } from './PlotList';
 import { PlotPopup } from './PlotPopup';
+import { PlotsPanel } from './PlotsPanel';
 import { SearchPanel } from './SearchPanel';
 
 export function MapPage() {
@@ -23,6 +26,8 @@ export function MapPage() {
     drawing,
     plotForm,
     searchPanel,
+    plotsPanel,
+    searchResults,
     details,
     management,
     sale,
@@ -43,6 +48,9 @@ export function MapPage() {
           />
         </div>
         <div ref={mapTargetRef} className={styles.map} data-testid="map" />
+        <div className={styles.legend}>
+          <MapLegend />
+        </div>
       </section>
       <aside className={styles.panel} aria-label={messages.map.panel}>
         <Typography variant="h6" component="h2" gutterBottom>
@@ -78,19 +86,34 @@ export function MapPage() {
             onCancel={plotForm.cancel}
           />
         ) : searchPanel ? (
-          <SearchPanel
-            form={searchPanel.form}
-            radius={searchPanel.radius}
-            capped={searchPanel.capped}
-            status={searchPanel.status}
-            onApplyFilters={searchPanel.applyFilters}
-            onClearFilters={searchPanel.clearFilters}
-            onNewSearch={searchPanel.newSearch}
-          />
+          <Stack spacing={2}>
+            <SearchPanel
+              form={searchPanel.form}
+              radius={searchPanel.radius}
+              capped={searchPanel.capped}
+              status={searchPanel.status}
+              onApplyFilters={searchPanel.applyFilters}
+              onClearFilters={searchPanel.clearFilters}
+              onNewSearch={searchPanel.newSearch}
+            />
+            <PlotList
+              plots={searchResults}
+              selectedId={details.selectedId}
+              onSelect={details.select}
+            />
+          </Stack>
         ) : (
-          <Typography role="status" variant="subtitle2">
-            {plotsStatus}
-          </Typography>
+          <PlotsPanel
+            tab={plotsPanel.tab}
+            tabs={plotsPanel.tabs}
+            onSelectTab={plotsPanel.selectTab}
+            plots={plotsPanel.plots}
+            areaStatus={plotsStatus}
+            myPlotsLoading={plotsPanel.myPlotsLoading}
+            myPlotsFailed={plotsPanel.myPlotsFailed}
+            selectedId={details.selectedId}
+            onSelectPlot={details.select}
+          />
         )}
       </aside>
       {details.plot &&
