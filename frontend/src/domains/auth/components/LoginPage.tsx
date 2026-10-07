@@ -1,16 +1,17 @@
 import Button from '@mui/material/Button';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router';
 import { FormTextField } from '../../../shared/components/FormTextField';
+import { PasswordField } from '../../../shared/components/PasswordField';
 import { messages } from '../../../shared/i18n/messages';
 import { useLogIn } from '../hooks/useAuth';
 import type { Credentials } from '../types';
 import {
-  describeAuthError,
+  describeLoginError,
   EMPTY_CREDENTIALS,
-  resolverFor,
   toCredentials,
   validateCredentials,
 } from '../utils/authForm';
@@ -23,28 +24,27 @@ export function LoginPage() {
   const navigate = useNavigate();
   const redirect = (useLocation().state ?? {}) as AuthRedirect;
   const logIn = useLogIn();
-  const form = useForm<Credentials>({
-    defaultValues: EMPTY_CREDENTIALS,
-    resolver: resolverFor(validateCredentials),
-  });
+  const form = useForm<Credentials>({ defaultValues: EMPTY_CREDENTIALS });
+  const [incomplete, setIncomplete] = useState(false);
 
-  const submit = form.handleSubmit((values) =>
+  // Checked on submit only, and any failure reads the same: no hint of which field was wrong.
+  const submit = form.handleSubmit((values) => {
+    const invalid = Object.keys(validateCredentials(values)).length > 0;
+    setIncomplete(invalid);
+    if (invalid) {
+      logIn.reset();
+      return;
+    }
     logIn.mutate(toCredentials(values), {
       onSuccess: () => navigate(redirect.from ?? '/', { replace: true }),
-      onError: (error) => {
-        const { fieldErrors } = describeAuthError(error);
-        for (const [field, message] of Object.entries(fieldErrors)) {
-          form.setError(field as keyof Credentials, { type: 'server', message });
-        }
-      },
-    }),
-  );
+    });
+  });
 
   return (
     <AuthCard
       title={text.logIn.title}
       notice={redirect.reason && text.logIn.reasons[redirect.reason]}
-      error={describeAuthError(logIn.error).message}
+      error={incomplete ? text.errors.badCredentials : describeLoginError(logIn.error)}
       footer={
         <>
           {text.logIn.noAccount}{' '}
@@ -69,11 +69,12 @@ export function LoginPage() {
           autoComplete="email"
           required
         />
-        <FormTextField
+        <PasswordField
           name="password"
           control={form.control}
           label={text.fields.password}
-          type="password"
+          showLabel={text.fields.showPassword}
+          hideLabel={text.fields.hidePassword}
           autoComplete="current-password"
           required
         />

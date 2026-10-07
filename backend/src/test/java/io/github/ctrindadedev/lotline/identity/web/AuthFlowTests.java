@@ -119,7 +119,8 @@ class AuthFlowTests {
 
     register("Ana Again", "ANA@example.com", PASSWORD, new MockHttpSession())
         .andExpect(status().isConflict())
-        .andExpect(jsonPath("$.detail").value("An account with this email already exists"));
+        .andExpect(
+            jsonPath("$.detail").value("The account could not be created with these details"));
   }
 
   @Test
