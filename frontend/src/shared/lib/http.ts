@@ -42,11 +42,40 @@ export function getJson<T>(path: string, query?: QueryParams, signal?: AbortSign
   return request<T>(buildUrl(path, query), { method: 'GET', signal });
 }
 
-export function postJson<T>(path: string, body: unknown): Promise<T> {
+export function postJson<T>(path: string, body?: unknown): Promise<T> {
+  return send<T>('POST', path, body);
+}
+
+export function putJson<T>(path: string, body: unknown): Promise<T> {
+  return send<T>('PUT', path, body);
+}
+
+export function deleteJson(path: string): Promise<void> {
+  return send<void>('DELETE', path);
+}
+
+const CSRF_COOKIE = 'XSRF-TOKEN';
+const CSRF_HEADER = 'X-XSRF-TOKEN';
+
+/** Read on every write: the API replaces the token, for instance after a logout. */
+export function csrfToken(): string | undefined {
+  const cookie = document.cookie.split('; ').find((entry) => entry.startsWith(`${CSRF_COOKIE}=`));
+  return cookie && decodeURIComponent(cookie.slice(CSRF_COOKIE.length + 1));
+}
+
+function send<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const headers: Record<string, string> = {};
+  const token = csrfToken();
+  if (token) {
+    headers[CSRF_HEADER] = token;
+  }
+  if (body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+  }
   return request<T>(buildUrl(path), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
 }
 
@@ -54,6 +83,9 @@ async function request<T>(url: string, init: RequestInit): Promise<T> {
   const response = await fetch(url, init);
   if (!response.ok) {
     throw await toApiError(response);
+  }
+  if (response.status === 204) {
+    return undefined as T;
   }
   return (await response.json()) as T;
 }

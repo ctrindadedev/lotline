@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApiError, buildUrl, getJson, postJson } from './http';
+import { ApiError, buildUrl, deleteJson, getJson, postJson, putJson } from './http';
 
 function jsonResponse(body: unknown, status = 200, contentType = 'application/json') {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': contentType } });
@@ -126,6 +126,47 @@ describe('postJson', () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: '{"price":10}',
+    });
+  });
+});
+
+describe('writes', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    document.cookie = 'XSRF-TOKEN=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+  });
+
+  it('send the CSRF token from its cookie, read at request time', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async () => jsonResponse({}));
+
+    document.cookie = 'XSRF-TOKEN=first%20token; path=/';
+    await putJson('/plots/1', { price: 1 });
+    document.cookie = 'XSRF-TOKEN=second; path=/';
+    await postJson('/auth/logout');
+
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({
+      method: 'PUT',
+      headers: { 'X-XSRF-TOKEN': 'first token', 'Content-Type': 'application/json' },
+    });
+    expect(fetchMock.mock.calls[1][1]).toEqual({
+      method: 'POST',
+      headers: { 'X-XSRF-TOKEN': 'second' },
+      body: undefined,
+    });
+  });
+
+  it('send no CSRF header without the cookie, and accept an empty 204', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response(null, { status: 204 }));
+
+    await expect(deleteJson('/plots/1')).resolves.toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/plots/1', {
+      method: 'DELETE',
+      headers: {},
+      body: undefined,
     });
   });
 });

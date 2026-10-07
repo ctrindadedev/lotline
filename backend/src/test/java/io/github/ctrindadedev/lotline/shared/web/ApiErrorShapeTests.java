@@ -1,5 +1,6 @@
 package io.github.ctrindadedev.lotline.shared.web;
 
+import static io.github.ctrindadedev.lotline.TestSecurity.loggedIn;
 import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -47,10 +48,10 @@ class ApiErrorShapeTests {
         Arguments.of("id that is not a UUID", get("/api/v1/plots/abc"), 400),
         Arguments.of("unknown plot", get("/api/v1/plots/" + UNKNOWN_ID), 404),
         Arguments.of("unknown route", get("/api/v1/nope"), 404),
-        Arguments.of("unsupported method", delete("/api/v1/plots"), 405),
+        Arguments.of("unsupported method", delete("/api/v1/plots").with(loggedIn()), 405),
         Arguments.of(
             "unsupported media type",
-            post("/api/v1/plots").contentType(MediaType.TEXT_PLAIN).content("x"),
+            post("/api/v1/plots").with(loggedIn()).contentType(MediaType.TEXT_PLAIN).content("x"),
             415),
         Arguments.of("invalid geometry", json(post("/api/v1/plots"), plot(BOWTIE)), 422),
         Arguments.of("search latitude out of range", search("91", "-47", "100"), 400),
@@ -113,7 +114,7 @@ class ApiErrorShapeTests {
 
   private static MockHttpServletRequestBuilder json(
       MockHttpServletRequestBuilder request, String body) {
-    return request.contentType(MediaType.APPLICATION_JSON).content(body);
+    return request.with(loggedIn()).contentType(MediaType.APPLICATION_JSON).content(body);
   }
 
   private static MockHttpServletRequestBuilder search(String lat, String lng, String radius) {

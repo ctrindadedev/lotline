@@ -96,6 +96,8 @@ export function describeSaveError(error: Error | null): SaveErrorView {
   switch (error.status) {
     case 400:
       return describeInvalidFields(error);
+    case 401:
+      return { ...NO_ERROR, message: text.saveErrors.sessionExpired };
     case 409:
       return { ...NO_ERROR, message: text.saveErrors.overlap };
     case 422:

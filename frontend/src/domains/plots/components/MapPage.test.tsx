@@ -1,8 +1,16 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createQueryWrapper } from '../../../test/queryClient';
 import { MapPage } from './MapPage';
+
+vi.mock('../../auth', () => ({
+  useCurrentUser: () => ({
+    user: { id: 'u1', name: 'Ana', email: 'ana@example.com' },
+    isLoading: false,
+  }),
+  useForgetUser: () => () => {},
+}));
 import { messages } from '../../../shared/i18n/messages';
 
 describe('MapPage', () => {

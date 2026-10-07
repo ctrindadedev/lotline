@@ -71,6 +71,10 @@ jobs:
           curl -fsS http://localhost:8080/ | grep -q '<div id="root">'
           curl -fsS 'http://localhost:8080/api/v1/plots?bbox=-47.2,-23.0,-46.9,-22.8' \
             | jq -e '.features | length >= 6'
+      - name: An anonymous visitor gets the CSRF cookie needed to log in
+        run: |
+          curl -sS -o /dev/null -D - http://localhost:8080/api/v1/auth/me \
+            | grep -qi '^set-cookie: XSRF-TOKEN='
       - if: failure()
         run: docker compose logs
       - if: always()

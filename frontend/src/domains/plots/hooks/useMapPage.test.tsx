@@ -21,6 +21,25 @@ const BOUNDARY: GeoJsonPolygon = {
 
 const VALUES = { price: '1000', description: 'A plot', contact: 'seller@example.com' };
 
+const { auth, navigate, forgetUser } = vi.hoisted(() => ({
+  auth: {
+    user: { id: 'u1', name: 'Ana', email: 'ana@example.com' } as object | null,
+    isLoading: false,
+  },
+  navigate: vi.fn<(to: string, options?: object) => void>(),
+  forgetUser: vi.fn<() => void>(),
+}));
+
+vi.mock('../../auth', () => ({
+  useCurrentUser: () => auth,
+  useForgetUser: () => forgetUser,
+}));
+
+vi.mock('react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-router')>()),
+  useNavigate: () => navigate,
+}));
+
 const { plotDrawn, circleDrawn, closeDetails, detailsArgs, undoLastPoint } = vi.hoisted(() => ({
   undoLastPoint: vi.fn<() => void>(),
   plotDrawn: { current: null as ((polygon: GeoJsonPolygon) => void) | null },
@@ -217,6 +236,47 @@ describe('useMapPage', () => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     });
     expect(closeDetails).not.toHaveBeenCalled();
+  });
+
+  it('sends a visitor to the login page to list a plot', () => {
+    auth.user = null;
+    navigate.mockClear();
+    const { result } = renderHook(() => useMapPage(), { wrapper: createQueryWrapper() });
+
+    act(() => result.current.toolbar.drawPlot());
+
+    expect(result.current.mode).toBe('idle');
+    expect(navigate).toHaveBeenCalledWith('/login', {
+      state: { from: '/', reason: 'listPlot' },
+    });
+    auth.user = { id: 'u1', name: 'Ana', email: 'ana@example.com' };
+  });
+
+  it('waits for the session check before deciding where "list a plot" goes', () => {
+    auth.user = null;
+    auth.isLoading = true;
+    navigate.mockClear();
+    const { result } = renderHook(() => useMapPage(), { wrapper: createQueryWrapper() });
+
+    act(() => result.current.toolbar.drawPlot());
+
+    expect(result.current.mode).toBe('idle');
+    expect(navigate).not.toHaveBeenCalled();
+    auth.user = { id: 'u1', name: 'Ana', email: 'ana@example.com' };
+    auth.isLoading = false;
+  });
+
+  it('forgets the user when the session expired while drawing', async () => {
+    forgetUser.mockClear();
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(problem(401, { title: 'Unauthorized' }));
+    const { result } = renderPage();
+
+    await fillAndSubmit(result);
+
+    await waitFor(() => expect(forgetUser).toHaveBeenCalledOnce());
+    expect(result.current.plotForm!.alert.message).toBe(
+      messages.plotForm.saveErrors.sessionExpired,
+    );
   });
 
   it('closes the plot details when the user starts drawing', () => {
