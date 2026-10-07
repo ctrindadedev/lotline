@@ -97,6 +97,28 @@ describe('toGeoJsonPolygon', () => {
     });
   });
 
+  it('keeps a vertex snapped onto a slanted neighbour edge exactly on it, unrounded', () => {
+    const [a, b] = [
+      [-47, -22],
+      [-46.98, -21.993],
+    ];
+    const t = 0.37;
+    const onEdge = [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])];
+    const neighbour = new Polygon([[a, b, [-46.98, -22.01], a].map((c) => fromLonLat(c))]);
+    const ring = [
+      [onEdge[0], onEdge[1] + 3e-6],
+      [-46.99, -22.02],
+      [-47.0, -22.02],
+    ];
+    const drawn = new Polygon([[...ring, ring[0]].map((c) => fromLonLat(c))]);
+
+    const [[snapped]] = toGeoJsonPolygon(drawn, [neighbour]).coordinates;
+
+    const cross = (snapped[0] - a[0]) * (b[1] - a[1]) - (snapped[1] - a[1]) * (b[0] - a[0]);
+    const distanceToEdge = Math.abs(cross) / Math.hypot(b[0] - a[0], b[1] - a[1]);
+    expect(distanceToEdge).toBeLessThan(1e-12);
+  });
+
   it('moves a polygon drawn on the next copy of the world back onto the main one', () => {
     const ring = [
       [190, -22],

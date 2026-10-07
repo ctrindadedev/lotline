@@ -11,8 +11,9 @@ export interface KeyPress {
 }
 
 /**
- * Esc leaves a drawing or a search, or closes the plot details; Ctrl/Cmd+Z (not the Shift redo) or Backspace removes
- * the last corner of a plot being drawn. Nothing while typing, and Esc never discards a plot whose
+ * Esc leaves a drawing, closes the plot details, or leaves a search (details first, so closing a
+ * result's popup keeps the search); Ctrl/Cmd+Z (not the Shift redo) or Backspace removes the last
+ * corner of a plot being drawn. Nothing while typing, and Esc never discards a plot whose
  * form is open: the form has its own buttons for that.
  */
 export function shortcutFor(
@@ -24,10 +25,13 @@ export function shortcutFor(
     return null;
   }
   if (key === 'Escape') {
-    if (mode === 'drawingPlot' || mode === 'drawingSearch' || mode === 'searching') {
+    if (mode === 'drawingPlot' || mode === 'drawingSearch') {
       return 'cancel';
     }
-    return detailsOpen ? 'closeDetails' : null;
+    if (detailsOpen) {
+      return 'closeDetails';
+    }
+    return mode === 'searching' ? 'cancel' : null;
   }
   const undo =
     key === 'Backspace' || ((ctrlKey || metaKey) && !shiftKey && key.toLowerCase() === 'z');
