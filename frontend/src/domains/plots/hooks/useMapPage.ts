@@ -1,10 +1,10 @@
-import { useEffect, useEffectEvent, useRef } from 'react';
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useCurrentUser, type AuthRedirect } from '../../auth';
 import { isTyping, useKeyDown } from '../../../shared/hooks/useKeyDown';
 import { messages } from '../../../shared/i18n/messages';
-import { draftStyle, searchAreaStyle, styleByLook } from '../../../shared/map/styles';
-import { SELECTED, useSelectedFeature } from '../../../shared/map/useSelectedFeature';
+import { draftStyle, searchAreaStyle } from '../../../shared/map/styles';
+import { useSelectedFeature } from '../../../shared/map/useSelectedFeature';
 import { useDrawInteraction } from '../../../shared/map/useDrawInteraction';
 import { useMap } from '../../../shared/map/useMap';
 import { useMapViewport } from '../../../shared/map/useMapViewport';
@@ -20,13 +20,10 @@ import { usePlotReservation } from './usePlotReservation';
 import { usePlotSearch } from './usePlotSearch';
 import { MIN_PLOTS_ZOOM, usePlotsInView } from './usePlotsInView';
 import type { PlotPopupAction } from '../components/PlotPopup';
-import type { PlotFeature, PlotProperties } from '../types';
-import { plotLook } from '../utils/plotLook';
+import type { PlotFeature } from '../types';
+import { pricesOf, type ColourBy } from '../utils/priceColours';
+import { plotStyleFor } from '../utils/plotStyle';
 import { usePlotsPanel } from './usePlotsPanel';
-
-const plotStyle = styleByLook((properties) =>
-  plotLook(properties as unknown as PlotProperties, properties[SELECTED] === true),
-);
 
 export function useMapPage() {
   const { targetRef, map } = useMap();
@@ -41,6 +38,9 @@ export function useMapPage() {
   const searching = mode === 'searching';
   const shownPlots = searching ? search.results : plotsInView.plots;
   const panel = usePlotsPanel(plotsInView.plots?.features ?? [], user?.id ?? null);
+  const [colourBy, setColourBy] = useState<ColourBy>('status');
+  const prices = useMemo(() => pricesOf(shownPlots?.features ?? []), [shownPlots]);
+  const plotStyle = useMemo(() => plotStyleFor(colourBy, prices), [colourBy, prices]);
 
   useVectorLayer(map, search.circle, searchAreaStyle);
   const plotsSource = useVectorLayer(map, shownPlots, plotStyle);
@@ -162,6 +162,7 @@ export function useMapPage() {
       myPlotsFailed: panel.myPlotsFailed,
     },
     searchResults: search.results?.features ?? [],
+    legend: { colourBy, setColourBy, priceRange: prices.range },
     details: {
       plot: details.plot,
       selectedId,

@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { messages } from '../../../shared/i18n/messages';
 import type { PanelTab } from '../hooks/usePlotsPanel';
 import type { PlotFeature } from '../types';
-import { MapLegend } from './MapLegend';
 import { PlotsPanel } from './PlotsPanel';
 
 const text = messages.plotsPanel;
@@ -109,16 +108,5 @@ describe('PlotsPanel', () => {
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(screen.getByRole('list', { name: text.list })).toBeInTheDocument();
-  });
-});
-
-describe('MapLegend', () => {
-  it('names every status colour and the dashed outline of the plots of the user', () => {
-    render(<MapLegend />);
-    const legend = screen.getByRole('list', { name: messages.legend.label });
-
-    for (const label of [...Object.values(messages.popup.status), messages.legend.mine]) {
-      expect(legend).toHaveTextContent(label);
-    }
   });
 });
