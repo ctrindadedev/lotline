@@ -1,5 +1,6 @@
 package io.github.ctrindadedev.lotline.plot.service;
 
+import io.github.ctrindadedev.lotline.plot.PlotStatus;
 import io.github.ctrindadedev.lotline.plot.persistence.Plot;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -14,6 +15,9 @@ public record PlotDetails(
     String description,
     String contact,
     UUID ownerId,
+    PlotStatus status,
+    UUID buyerId,
+    boolean reservable,
     Instant createdAt) {
 
   static PlotDetails from(Plot plot) {
@@ -24,6 +28,9 @@ public record PlotDetails(
         plot.getDescription(),
         plot.getContact(),
         plot.getOwnerId(),
+        plot.getStatus(),
+        plot.getBuyerId(),
+        plot.isReservable(),
         plot.getCreatedAt());
   }
 }

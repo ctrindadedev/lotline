@@ -1,5 +1,6 @@
 import CloseIcon from '@mui/icons-material/Close';
 import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import Link from '@mui/material/Link';
@@ -16,21 +17,34 @@ import {
 import { messages } from '../../../shared/i18n/messages';
 import { polygonAreaSquareMeters } from '../../../shared/map/geodesy';
 import type { AuthRedirect } from '../../auth';
-import type { PlotFeature } from '../types';
+import type { PlotFeature, PlotStatus } from '../types';
+import { describeStatus } from '../utils/reservation';
 
 const text = messages.popup;
 const SEE_CONTACT: AuthRedirect = { from: '/', reason: 'seeContact' };
 
+const STATUS_COLOR: Record<PlotStatus, 'success' | 'warning' | 'default'> = {
+  AVAILABLE: 'success',
+  RESERVED: 'warning',
+  SOLD: 'default',
+};
+
+export interface PlotPopupAction {
+  label: string;
+  onClick: () => void;
+  color?: 'primary' | 'error';
+}
+
 interface PlotPopupProps {
   plot: PlotFeature;
   onClose: () => void;
-  /** Only for the plot's owner. */
-  onEdit?: () => void;
-  onDelete?: () => void;
+  /** What the user asking can do with this plot, first one highlighted. */
+  actions?: PlotPopupAction[];
+  busy?: boolean;
 }
 
-export function PlotPopup({ plot, onClose, onEdit, onDelete }: PlotPopupProps) {
-  const { price, description, contact, createdAt } = plot.properties;
+export function PlotPopup({ plot, onClose, actions = [], busy = false }: PlotPopupProps) {
+  const { price, description, contact, createdAt, status } = plot.properties;
   const area = polygonAreaSquareMeters(plot.geometry);
 
   return (
@@ -58,6 +72,12 @@ export function PlotPopup({ plot, onClose, onEdit, onDelete }: PlotPopupProps) {
           <CloseIcon fontSize="small" />
         </IconButton>
       </Stack>
+      <Chip
+        size="small"
+        color={STATUS_COLOR[status]}
+        label={describeStatus(plot.properties)}
+        sx={{ mt: 1 }}
+      />
       <Divider sx={{ my: 1.5 }} />
       <Typography variant="body2" sx={{ whiteSpace: 'pre-line', mb: 1.5 }}>
         {description}
@@ -73,14 +93,20 @@ export function PlotPopup({ plot, onClose, onEdit, onDelete }: PlotPopupProps) {
       <Typography variant="caption" color="text.secondary">
         {text.listedOn(formatDate(createdAt))}
       </Typography>
-      {onEdit && onDelete && (
-        <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-          <Button size="small" variant="outlined" onClick={onEdit}>
-            {text.edit}
-          </Button>
-          <Button size="small" color="error" onClick={onDelete}>
-            {text.delete}
-          </Button>
+      {actions.length > 0 && (
+        <Stack direction="row" sx={{ mt: 1.5, flexWrap: 'wrap', gap: 1 }}>
+          {actions.map((action, index) => (
+            <Button
+              key={action.label}
+              size="small"
+              variant={index === 0 ? 'outlined' : 'text'}
+              color={action.color ?? 'primary'}
+              disabled={busy}
+              onClick={action.onClick}
+            >
+              {action.label}
+            </Button>
+          ))}
         </Stack>
       )}
     </Paper>

@@ -50,8 +50,8 @@ export function putJson<T>(path: string, body: unknown): Promise<T> {
   return send<T>('PUT', path, body);
 }
 
-export function deleteJson(path: string): Promise<void> {
-  return send<void>('DELETE', path);
+export function deleteJson<T = void>(path: string): Promise<T> {
+  return send<T>('DELETE', path);
 }
 
 const CSRF_COOKIE = 'XSRF-TOKEN';

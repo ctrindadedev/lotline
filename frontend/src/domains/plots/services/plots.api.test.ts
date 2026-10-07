@@ -5,7 +5,10 @@ import {
   deletePlot,
   getPlot,
   listPlotsInBoundingBox,
+  releaseReservation,
+  reservePlot,
   searchPlots,
+  sellPlot,
   updatePlot,
 } from './plots.api';
 
@@ -28,7 +31,10 @@ const PLOT: PlotFeature = {
     description: 'Corner plot',
     contact: 'seller@example.com',
     createdAt: '2026-10-06T12:00:00Z',
+    status: 'AVAILABLE',
+    reservable: true,
     ownedByMe: false,
+    reservedByMe: false,
   },
 };
 
@@ -114,5 +120,23 @@ describe('plots API', () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
     await expect(deletePlot(PLOT.id)).resolves.toBeUndefined();
     expect(fetchMock.mock.calls[1][1]).toMatchObject({ method: 'DELETE' });
+  });
+
+  it('reserves, releases and sells a plot', async () => {
+    respondWith(PLOT);
+    const url = `/api/v1/plots/${PLOT.id}`;
+
+    await expect(reservePlot(PLOT.id)).resolves.toEqual(PLOT);
+    expect(fetchMock.mock.calls[0][0]).toBe(`${url}/reservation`);
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: 'POST' });
+
+    respondWith(PLOT);
+    await expect(releaseReservation(PLOT.id)).resolves.toEqual(PLOT);
+    expect(fetchMock.mock.calls[1][0]).toBe(`${url}/reservation`);
+    expect(fetchMock.mock.calls[1][1]).toMatchObject({ method: 'DELETE' });
+
+    respondWith(PLOT);
+    await expect(sellPlot(PLOT.id)).resolves.toEqual(PLOT);
+    expect(fetchMock.mock.calls[2][0]).toBe(`${url}/sale`);
   });
 });

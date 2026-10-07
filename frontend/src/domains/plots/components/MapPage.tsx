@@ -7,7 +7,7 @@ import { messages } from '../../../shared/i18n/messages';
 import { useMapPage } from '../hooks/useMapPage';
 import styles from './MapPage.module.css';
 import { MapToolbar } from './MapToolbar';
-import { DeletePlotDialog } from './DeletePlotDialog';
+import { ConfirmDialog } from './ConfirmDialog';
 import { EditPlotDialog } from './EditPlotDialog';
 import { PlotForm } from './PlotForm';
 import { PlotPopup } from './PlotPopup';
@@ -25,6 +25,7 @@ export function MapPage() {
     searchPanel,
     details,
     management,
+    sale,
     notice,
     dismissNotice,
   } = useMapPage();
@@ -97,8 +98,8 @@ export function MapPage() {
           <PlotPopup
             plot={details.plot}
             onClose={details.close}
-            onEdit={management.canManage ? management.startEdit : undefined}
-            onDelete={management.canManage ? management.startDelete : undefined}
+            actions={details.actions}
+            busy={details.busy}
           />,
           details.overlayElement,
         )}
@@ -110,12 +111,27 @@ export function MapPage() {
         onSubmit={management.edit.submit}
         onClose={management.edit.close}
       />
-      <DeletePlotDialog
+      <ConfirmDialog
         open={management.remove.open}
+        title={messages.manage.deleteTitle}
+        body={messages.manage.deleteBody}
+        confirmLabel={messages.manage.confirmDelete}
+        cancelLabel={messages.manage.cancel}
+        color="error"
         alert={management.remove.alert}
-        isDeleting={management.remove.isDeleting}
+        isWorking={management.remove.isDeleting}
         onConfirm={management.remove.confirm}
         onClose={management.remove.close}
+      />
+      <ConfirmDialog
+        open={sale.open}
+        title={messages.reservation.saleTitle}
+        body={messages.reservation.saleBody}
+        confirmLabel={messages.reservation.actions.sell}
+        cancelLabel={messages.reservation.back}
+        isWorking={sale.isSelling}
+        onConfirm={sale.confirm}
+        onClose={sale.close}
       />
       <Snackbar
         open={notice !== null}

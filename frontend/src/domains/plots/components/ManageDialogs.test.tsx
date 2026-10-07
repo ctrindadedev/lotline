@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { describe, expect, it, vi } from 'vitest';
 import { messages } from '../../../shared/i18n/messages';
 import { plotFormResolver, type PlotFormValues } from '../utils/plotForm';
-import { DeletePlotDialog } from './DeletePlotDialog';
+import { ConfirmDialog } from './ConfirmDialog';
 import { EditPlotDialog } from './EditPlotDialog';
 
 function EditHarness({ onValid, onClose }: { onValid: () => void; onClose: () => void }) {
@@ -41,15 +41,20 @@ describe('EditPlotDialog', () => {
   });
 });
 
-describe('DeletePlotDialog', () => {
-  it('asks before deleting', async () => {
+describe('ConfirmDialog', () => {
+  it('asks before an action that cannot be undone', async () => {
     const onConfirm = vi.fn<() => void>();
     const onClose = vi.fn<() => void>();
     render(
-      <DeletePlotDialog
+      <ConfirmDialog
         open
+        title={messages.manage.deleteTitle}
+        body={messages.manage.deleteBody}
+        confirmLabel={messages.manage.confirmDelete}
+        cancelLabel={messages.manage.cancel}
+        color="error"
         alert={messages.manage.errors.gone}
-        isDeleting={false}
+        isWorking={false}
         onConfirm={onConfirm}
         onClose={onClose}
       />,

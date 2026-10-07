@@ -53,15 +53,43 @@ public class PlotService {
 
   @Transactional
   public void delete(UUID id, UUID requesterId) {
-    plotRepository.delete(findOwned(id, requesterId));
+    Plot plot = findOwned(id, requesterId);
+    plot.ensureChangeable();
+    plotRepository.delete(plot);
+  }
+
+  @Transactional
+  public PlotDetails reserve(UUID id, UUID buyerId) {
+    Plot plot = findForUpdate(id);
+    plot.reserve(buyerId);
+    return PlotDetails.from(plotRepository.saveAndFlush(plot));
+  }
+
+  @Transactional
+  public PlotDetails release(UUID id, UUID requesterId) {
+    Plot plot = findForUpdate(id);
+    plot.release(requesterId);
+    return PlotDetails.from(plotRepository.saveAndFlush(plot));
+  }
+
+  @Transactional
+  public PlotDetails sell(UUID id, UUID requesterId) {
+    Plot plot = findForUpdate(id);
+    plot.sell(requesterId);
+    return PlotDetails.from(plotRepository.saveAndFlush(plot));
   }
 
   private Plot findOwned(UUID id, UUID requesterId) {
-    Plot plot = plotRepository.findById(id).orElseThrow(() -> new PlotNotFoundException(id));
+    Plot plot = findForUpdate(id);
     if (!plot.isOwnedBy(requesterId)) {
       throw new PlotNotOwnedException();
     }
     return plot;
+  }
+
+  // Row lock: concurrent changes to one plot run one after the other and see each other's result.
+  private Plot findForUpdate(UUID id) {
+    return plotRepository.findByIdForUpdate(id).orElseThrow(() -> new PlotNotFoundException(id));
   }
 
   @Transactional(readOnly = true)

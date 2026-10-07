@@ -7,13 +7,20 @@ import type {
 
 export type { BoundingBox };
 
+export type PlotStatus = 'AVAILABLE' | 'RESERVED' | 'SOLD';
+
 export interface PlotProperties {
   price: number;
   description: string;
   /** Only sent to logged-in users. */
   contact?: string;
   createdAt: string;
+  status: PlotStatus;
+  /** False for plots without a seller (the sample plots). */
+  reservable: boolean;
   ownedByMe: boolean;
+  /** The user asking reserved it, or bought it once sold. */
+  reservedByMe: boolean;
 }
 
 export type PlotFeature = GeoJsonFeature<PlotProperties>;

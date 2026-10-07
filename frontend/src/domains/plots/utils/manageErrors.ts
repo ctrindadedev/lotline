@@ -18,6 +18,8 @@ export function describeManageError(error: Error | null): string | null {
       return text.notOwner;
     case 404:
       return text.gone;
+    case 409:
+      return text.frozen;
     default:
       return text.server;
   }

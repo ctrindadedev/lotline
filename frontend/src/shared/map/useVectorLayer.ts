@@ -3,14 +3,14 @@ import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import { useEffect, useState } from 'react';
 import { toOlFeatures, type GeoJsonFeatureCollection } from './geojson';
-import type Style from 'ol/style/Style';
+import type { StyleLike } from 'ol/style/Style';
 import { polygonStyle } from './styles';
 
 /** Shows a GeoJSON collection on its own layer; `undefined` leaves the layer empty. Returns its source. */
 export function useVectorLayer(
   map: OlMap | null,
   collection: GeoJsonFeatureCollection<object> | undefined,
-  style: Style = polygonStyle,
+  style: StyleLike = polygonStyle,
 ) {
   const [source] = useState(() => new VectorSource());
 
