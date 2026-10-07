@@ -41,6 +41,11 @@ export const messages = {
     noneListed: 'Você ainda não anunciou terrenos. Use "Anunciar terreno" no mapa.',
     noneReserved: 'Você ainda não reservou terrenos.',
   },
+  crash: {
+    title: 'Algo deu errado.',
+    body: 'Um erro inesperado interrompeu a página. Recarregue para continuar.',
+    reload: 'Recarregar',
+  },
   summary: {
     label: 'Resumo da área',
     statuses: (available: number, reserved: number, sold: number) =>
