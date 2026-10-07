@@ -79,6 +79,7 @@ export const messages = {
     label: 'Detalhes do terreno',
     close: 'Fechar',
     contact: 'Contato:',
+    contactHidden: 'Entre para ver o contato',
     listedOn: (date: string) => `Anunciado em ${date}`,
     edit: 'Editar',
     delete: 'Excluir',
@@ -126,7 +127,10 @@ export const messages = {
     },
     logIn: {
       title: 'Entrar',
-      reasonListPlot: 'Entre na sua conta para anunciar um terreno.',
+      reasons: {
+        listPlot: 'Entre na sua conta para anunciar um terreno.',
+        seeContact: 'Entre na sua conta para ver o contato de quem anuncia.',
+      },
       submit: 'Entrar',
       noAccount: 'Ainda não tem conta?',
     },

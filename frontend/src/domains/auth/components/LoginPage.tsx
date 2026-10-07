@@ -43,7 +43,7 @@ export function LoginPage() {
   return (
     <AuthCard
       title={text.logIn.title}
-      notice={redirect.reason === 'listPlot' ? text.logIn.reasonListPlot : undefined}
+      notice={redirect.reason && text.logIn.reasons[redirect.reason]}
       error={describeAuthError(logIn.error).message}
       footer={
         <>

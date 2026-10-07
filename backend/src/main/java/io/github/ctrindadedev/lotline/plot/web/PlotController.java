@@ -16,6 +16,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -123,14 +124,15 @@ class PlotController {
   }
 
   private GeoJsonFeature<PlotProperties> toFeature(PlotDetails plot) {
+    Optional<UUID> me = currentUser.id();
     return geoJsonMapper.toFeature(
         plot.id(),
         plot.boundary(),
         new PlotProperties(
             plot.price(),
             plot.description(),
-            plot.contact(),
+            me.isPresent() ? plot.contact() : null,
             plot.createdAt(),
-            plot.ownerId() != null && currentUser.id().filter(plot.ownerId()::equals).isPresent()));
+            plot.ownerId() != null && me.filter(plot.ownerId()::equals).isPresent()));
   }
 }

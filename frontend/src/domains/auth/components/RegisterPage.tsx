@@ -43,7 +43,7 @@ export function RegisterPage() {
   return (
     <AuthCard
       title={text.register.title}
-      notice={redirect.reason === 'listPlot' ? text.logIn.reasonListPlot : undefined}
+      notice={redirect.reason && text.logIn.reasons[redirect.reason]}
       error={describeAuthError(register.error).message}
       footer={
         <>

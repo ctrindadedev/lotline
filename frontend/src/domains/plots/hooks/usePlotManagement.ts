@@ -57,7 +57,7 @@ export function usePlotManagement(plot: PlotFeature | null) {
       return;
     }
     const { price, description, contact } = plot.properties;
-    form.reset({ price: String(price).replace('.', ','), description, contact });
+    form.reset({ price: String(price).replace('.', ','), description, contact: contact ?? '' });
     update.reset();
     setDialog({ kind: 'edit', plotId: plot.id });
   }
