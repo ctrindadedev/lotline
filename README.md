@@ -1,6 +1,8 @@
 # Lotline
 
-Map-based marketplace for land plots: sellers draw a plot's exact boundary on an interactive map and list it; buyers draw a circle on the map to find plots inside that area.
+Map-based marketplace for land plots: sellers draw a plot's exact boundary on an interactive map and list it; buyers draw a circle on the map to find the plots that reach into it.
+
+![The map coloured by price per m², with the area summary and the plot cards in the side panel](docs/images/overview.jpg)
 
 ## What it is
 
@@ -15,6 +17,18 @@ A web app where land is listed by its real shape rather than by an address.
 - **Reserve and sell.** Another user reserves an available plot; the seller confirms the sale or releases the reservation. The map colours plots by status: blue available, amber reserved, grey sold.
 
 The interface is in Brazilian Portuguese; code, API and documentation are in English.
+
+### Using the app
+
+The labels below are the ones on screen, in Portuguese.
+
+- **Explore:** pan and zoom the map. The side panel (**Na área**) summarises the plots in view and lists them; a card opens the plot on the map. The legend switches the colours between **Status** and **Preço/m²**.
+- **Account:** **Criar conta** (sign up) or **Entrar** (log in) in the header. Logged in, the avatar menu opens **Meus anúncios** (my listings), **Minhas reservas** (my reservations) and **Sair** (log out).
+- **List a plot:** **Anunciar terreno**, then click the corners on the map and click the first one again to close the shape (Ctrl+Z removes the last corner, Esc cancels). Fill in **Preço**, **Descrição** and **Contato**, then **Salvar terreno**; **Redesenhar** keeps what you typed and lets you draw again.
+- **Search an area:** **Buscar numa área**, then press, drag and release on the map. Narrow the results with **Preço mín./máx.** and **Área mín./máx.**, then **Aplicar filtros**; **Desenhar outro círculo** starts over.
+- **A plot's popup:** **Reservar** (reserve) for buyers; **Cancelar reserva** (cancel) for the buyer of a reserved plot; **Confirmar venda** (confirm the sale) and **Liberar reserva** (release) for its seller; **Editar** and **Excluir** for the seller while it is available.
+
+![A circle search: the results in the side panel, a plot's popup on the map](docs/images/search.jpg)
 
 ## How it works
 
@@ -56,7 +70,7 @@ The database starts with sample plots around Campinas, where the map opens. They
 
 Stop with `Ctrl+C` or `docker compose down`; `docker compose down -v` also deletes the database volume.
 
-No `.env` file is needed. To change a default, export the variable or put it in a `.env` file next to `docker-compose.yml`:
+No `.env` file is needed. To change a default, export the variable or put it in a `.env` file next to `docker-compose.yml` (`.env.example` lists them):
 
 | Variable                                            | Default   | Purpose                          |
 | --------------------------------------------------- | --------- | -------------------------------- |
@@ -68,7 +82,7 @@ No `.env` file is needed. To change a default, export the variable or put it in 
 
 ## Running without Docker
 
-You need a JDK 21, Node.js 24 (see `frontend/.nvmrc`; 22.12 or later works) and PostgreSQL 17 with PostGIS 3.6.
+You need a JDK 21, Node.js 24 (see `frontend/.nvmrc`; 22.12 or later works) and PostgreSQL 17 with PostGIS 3.6. Gradle does not download a JDK: it looks for an installed JDK 21 (on `JAVA_HOME`, the `PATH` or the usual install folders).
 
 ### 1. Database
 
@@ -99,7 +113,16 @@ The extension is created by a superuser up front because the application's user 
 cd backend
 export DB_URL=jdbc:postgresql://localhost:5432/lotline DB_USER=lotline DB_PASSWORD=lotline
 export SPRING_LIQUIBASE_CONTEXTS=default,demo   # optional: load the sample plots
-./gradlew bootRun                               # gradlew.bat on Windows
+./gradlew bootRun
+```
+
+On Windows (PowerShell):
+
+```powershell
+cd backend
+$env:DB_URL = "jdbc:postgresql://localhost:5432/lotline"; $env:DB_USER = "lotline"; $env:DB_PASSWORD = "lotline"
+$env:SPRING_LIQUIBASE_CONTEXTS = "default,demo"   # optional: load the sample plots
+.\gradlew.bat bootRun
 ```
 
 The API listens on <http://localhost:8080> (Swagger UI at `/swagger-ui.html`).
@@ -116,14 +139,19 @@ Open <http://localhost:5173>. The Vite dev server proxies `/api` to the API on p
 
 ## Running the tests
 
+Backend: formatting, unit and integration tests, coverage gate (needs Docker running). From the repository root:
+
 ```bash
-# Backend: formatting, unit and integration tests, coverage gate (needs Docker running)
 cd backend
 ./gradlew check
 # report: backend/build/reports/jacoco/test/html/index.html
+```
 
-# Frontend: lint and formatting, type check, tests with coverage gate
+Frontend: lint and formatting, type check, tests with coverage gate. From the repository root:
+
+```bash
 cd frontend
+npm ci
 npm run lint && npm run typecheck
 npm run test:coverage
 # report: frontend/coverage/index.html
@@ -150,5 +178,6 @@ backend/            Spring Boot API (Gradle): modules plot/, identity/, shared/
 frontend/           React + OpenLayers app (Vite): app/, domains/plots, domains/auth, shared/map
 docs/architecture.md  Architecture overview and decision index
 docs/adr/           Architecture decision records
+docs/images/        Screenshots used in this README
 docker-compose.yml  Full stack: db + api + web
 ```
