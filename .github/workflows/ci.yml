@@ -28,6 +28,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       # Format, unit + integration tests (Testcontainers uses the runner's Docker) and coverage gate
       - run: ./gradlew check
+      - name: Coverage in the run summary
+        if: ${{ !cancelled() && hashFiles('backend/build/reports/jacoco/test/jacocoTestReport.xml') != '' }}
+        run: python3 ../.github/scripts/coverage_summary.py backend build/reports/jacoco/test/jacocoTestReport.xml >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
@@ -52,6 +55,9 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:coverage
+      - name: Coverage in the run summary
+        if: ${{ !cancelled() && hashFiles('frontend/coverage/coverage-summary.json') != '' }}
+        run: python3 ../.github/scripts/coverage_summary.py frontend coverage/coverage-summary.json >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:

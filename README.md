@@ -131,7 +131,7 @@ npm run test:coverage
 
 The backend integration tests start a `postgis/postgis` container with Testcontainers, so Docker must be running; there is no in-memory database, because none has PostGIS. One container is shared by the whole suite. The concurrency rules are tested by holding one transaction open while a second request runs.
 
-CI (GitHub Actions) runs both suites on every pull request, plus a job that builds the images, starts the stack with `docker compose` and checks the app and the API through nginx.
+CI (GitHub Actions) runs both suites on every pull request, plus a job that builds the images, starts the stack with `docker compose` and checks the app and the API through nginx. Each run shows the coverage of both suites as tables in its summary page (Actions → the run → Summary), and the HTML reports are attached to it as artifacts.
 
 ### Coverage exclusions
 
