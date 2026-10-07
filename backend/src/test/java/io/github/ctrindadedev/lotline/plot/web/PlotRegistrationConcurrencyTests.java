@@ -1,12 +1,14 @@
 package io.github.ctrindadedev.lotline.plot.web;
 
 import static io.github.ctrindadedev.lotline.TestSecurity.loggedIn;
+import static io.github.ctrindadedev.lotline.TestSecurity.signUp;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import io.github.ctrindadedev.lotline.IntegrationTest;
+import io.github.ctrindadedev.lotline.identity.service.AccountService;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.CountDownLatch;
@@ -14,6 +16,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -37,6 +40,13 @@ class PlotRegistrationConcurrencyTests {
   private static final long TIMEOUT_SECONDS = 10;
 
   @Autowired MockMvc mockMvc;
+  @Autowired AccountService accountService;
+
+  @BeforeEach
+  void logIn() {
+    signUp(accountService, "seller@example.com");
+  }
+
   @Autowired TransactionTemplate transactionTemplate;
   @Autowired JdbcTemplate jdbcTemplate;
 
@@ -46,6 +56,7 @@ class PlotRegistrationConcurrencyTests {
   void cleanUp() {
     executor.shutdownNow();
     jdbcTemplate.update("DELETE FROM plots");
+    jdbcTemplate.update("DELETE FROM users");
   }
 
   @Test

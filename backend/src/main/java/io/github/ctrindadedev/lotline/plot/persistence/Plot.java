@@ -33,6 +33,9 @@ public class Plot {
   @Column(nullable = false)
   private String contact;
 
+  @Column(name = "owner_id")
+  private UUID ownerId;
+
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
   private Instant createdAt;
@@ -43,11 +46,23 @@ public class Plot {
 
   protected Plot() {}
 
-  public Plot(Polygon boundary, BigDecimal price, String description, String contact) {
+  public Plot(
+      Polygon boundary, BigDecimal price, String description, String contact, UUID ownerId) {
     this.boundary = boundary;
     this.price = price;
     this.description = description;
     this.contact = contact;
+    this.ownerId = ownerId;
+  }
+
+  public void changeDetails(BigDecimal price, String description, String contact) {
+    this.price = price;
+    this.description = description;
+    this.contact = contact;
+  }
+
+  public boolean isOwnedBy(UUID userId) {
+    return ownerId != null && ownerId.equals(userId);
   }
 
   public UUID getId() {
@@ -68,6 +83,10 @@ public class Plot {
 
   public String getContact() {
     return contact;
+  }
+
+  public UUID getOwnerId() {
+    return ownerId;
   }
 
   public Instant getCreatedAt() {

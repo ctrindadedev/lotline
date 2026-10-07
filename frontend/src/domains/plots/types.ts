@@ -12,11 +12,18 @@ export interface PlotProperties {
   description: string;
   contact: string;
   createdAt: string;
+  ownedByMe: boolean;
 }
 
 export type PlotFeature = GeoJsonFeature<PlotProperties>;
 
 export type PlotFeatureCollection = GeoJsonFeatureCollection<PlotProperties>;
+
+export interface PlotChanges {
+  price: number;
+  description: string;
+  contact: string;
+}
 
 export interface NewPlot {
   boundary: GeoJsonPolygon;

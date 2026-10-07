@@ -1,6 +1,8 @@
 package io.github.ctrindadedev.lotline.plot.web;
 
+import io.github.ctrindadedev.lotline.identity.CurrentUser;
 import io.github.ctrindadedev.lotline.plot.service.NewPlot;
+import io.github.ctrindadedev.lotline.plot.service.PlotChanges;
 import io.github.ctrindadedev.lotline.plot.service.PlotDetails;
 import io.github.ctrindadedev.lotline.plot.service.PlotService;
 import io.github.ctrindadedev.lotline.plot.service.SearchFilters;
@@ -16,9 +18,11 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,10 +38,12 @@ class PlotController {
 
   private final PlotService plotService;
   private final GeoJsonMapper geoJsonMapper;
+  private final CurrentUser currentUser;
 
-  PlotController(PlotService plotService, GeoJsonMapper geoJsonMapper) {
+  PlotController(PlotService plotService, GeoJsonMapper geoJsonMapper, CurrentUser currentUser) {
     this.plotService = plotService;
     this.geoJsonMapper = geoJsonMapper;
+    this.currentUser = currentUser;
   }
 
   @Operation(summary = "List a plot for sale")
@@ -50,7 +56,8 @@ class PlotController {
                 geoJsonMapper.toPolygon(request.boundary()),
                 request.price(),
                 request.description(),
-                request.contact()));
+                request.contact(),
+                currentUser.requireId()));
     URI location =
         ServletUriComponentsBuilder.fromCurrentRequest()
             .path("/{id}")
@@ -93,6 +100,24 @@ class PlotController {
             new SearchFilters(minPrice, maxPrice, minAreaSquareMeters, maxAreaSquareMeters)));
   }
 
+  @Operation(summary = "Change a plot's price, description and contact (its owner only)")
+  @PutMapping("/{id}")
+  GeoJsonFeature<PlotProperties> update(
+      @PathVariable UUID id, @Valid @RequestBody UpdatePlotRequest request) {
+    return toFeature(
+        plotService.update(
+            id,
+            new PlotChanges(request.price(), request.description(), request.contact()),
+            currentUser.requireId()));
+  }
+
+  @Operation(summary = "Remove a plot (its owner only)")
+  @DeleteMapping("/{id}")
+  ResponseEntity<Void> delete(@PathVariable UUID id) {
+    plotService.delete(id, currentUser.requireId());
+    return ResponseEntity.noContent().build();
+  }
+
   private GeoJsonFeatureCollection<PlotProperties> toFeatureCollection(List<PlotDetails> plots) {
     return new GeoJsonFeatureCollection<>(plots.stream().map(this::toFeature).toList());
   }
@@ -101,6 +126,11 @@ class PlotController {
     return geoJsonMapper.toFeature(
         plot.id(),
         plot.boundary(),
-        new PlotProperties(plot.price(), plot.description(), plot.contact(), plot.createdAt()));
+        new PlotProperties(
+            plot.price(),
+            plot.description(),
+            plot.contact(),
+            plot.createdAt(),
+            plot.ownerId() != null && currentUser.id().filter(plot.ownerId()::equals).isPresent()));
   }
 }

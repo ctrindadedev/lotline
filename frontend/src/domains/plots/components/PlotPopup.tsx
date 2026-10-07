@@ -1,4 +1,5 @@
 import CloseIcon from '@mui/icons-material/Close';
+import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
@@ -19,9 +20,12 @@ const text = messages.popup;
 interface PlotPopupProps {
   plot: PlotFeature;
   onClose: () => void;
+  /** Only for the plot's owner. */
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export function PlotPopup({ plot, onClose }: PlotPopupProps) {
+export function PlotPopup({ plot, onClose, onEdit, onDelete }: PlotPopupProps) {
   const { price, description, contact, createdAt } = plot.properties;
   const area = polygonAreaSquareMeters(plot.geometry);
 
@@ -60,6 +64,16 @@ export function PlotPopup({ plot, onClose }: PlotPopupProps) {
       <Typography variant="caption" color="text.secondary">
         {text.listedOn(formatDate(createdAt))}
       </Typography>
+      {onEdit && onDelete && (
+        <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
+          <Button size="small" variant="outlined" onClick={onEdit}>
+            {text.edit}
+          </Button>
+          <Button size="small" color="error" onClick={onDelete}>
+            {text.delete}
+          </Button>
+        </Stack>
+      )}
     </Paper>
   );
 }

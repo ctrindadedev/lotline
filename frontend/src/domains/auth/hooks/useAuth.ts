@@ -24,8 +24,8 @@ function useSessionChange() {
 
 /** For a 401 elsewhere: the session is gone, so the app shows the visitor's options again. */
 export function useForgetUser() {
-  const queryClient = useQueryClient();
-  return () => queryClient.setQueryData(authKeys.me, null);
+  const onSessionChange = useSessionChange();
+  return () => onSessionChange(null);
 }
 
 export function useLogIn() {

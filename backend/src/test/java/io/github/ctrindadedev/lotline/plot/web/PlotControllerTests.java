@@ -1,6 +1,7 @@
 package io.github.ctrindadedev.lotline.plot.web;
 
 import static io.github.ctrindadedev.lotline.TestSecurity.loggedIn;
+import static io.github.ctrindadedev.lotline.TestSecurity.signUp;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.startsWith;
@@ -11,7 +12,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import io.github.ctrindadedev.lotline.IntegrationTest;
+import io.github.ctrindadedev.lotline.identity.service.AccountService;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -32,6 +35,12 @@ class PlotControllerTests {
           + " [-46.99, -22.0], [-47.0, -21.99], [-47.0, -22.0]]]}";
 
   @Autowired MockMvc mockMvc;
+  @Autowired AccountService accountService;
+
+  @BeforeEach
+  void logIn() {
+    signUp(accountService, "seller@example.com");
+  }
 
   @Test
   void createsAPlotAndReturnsItAsAFeature() throws Exception {

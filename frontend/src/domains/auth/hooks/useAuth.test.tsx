@@ -50,14 +50,16 @@ describe('auth hooks', () => {
     expect(predicate({ queryKey: ['auth', 'me'] })).toBe(false);
   });
 
-  it('forgets the user when told the session is gone', () => {
+  it('forgets the user when told the session is gone and refetches what depended on it', async () => {
     const client = createTestQueryClient();
     client.setQueryData(authKeys.me, ANA);
+    const invalidate = vi.spyOn(client, 'invalidateQueries');
     const { result } = renderHook(() => useForgetUser(), { wrapper: createQueryWrapper(client) });
 
-    act(() => result.current());
+    await act(() => result.current());
 
     expect(client.getQueryData(authKeys.me)).toBeNull();
+    expect(invalidate).toHaveBeenCalledOnce();
   });
 
   it('forgets the user on logout and refetches everything', async () => {

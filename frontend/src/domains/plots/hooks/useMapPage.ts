@@ -11,6 +11,7 @@ import { drawShapeFor, interactionHint } from '../utils/interactionMode';
 import { shortcutFor } from '../utils/shortcuts';
 import { useInteractionMode } from './useInteractionMode';
 import { usePlotDetails } from './usePlotDetails';
+import { usePlotManagement } from './usePlotManagement';
 import { usePlotRegistration } from './usePlotRegistration';
 import { usePlotSearch } from './usePlotSearch';
 import { usePlotsInView } from './usePlotsInView';
@@ -32,6 +33,7 @@ export function useMapPage() {
   const plotsSource = useVectorLayer(map, shownPlots);
   useVectorLayer(map, registration.draft, draftStyle);
   const details = usePlotDetails(map, plotsSource, shownPlots, mode === 'idle' || searching);
+  const management = usePlotManagement(details.plot);
   const draw = useDrawInteraction(map, drawShapeFor(mode), {
     onPolygon: interaction.plotDrawn,
     onCircle: interaction.circleDrawn,
@@ -106,7 +108,11 @@ export function useMapPage() {
       overlayElement: details.overlayElement,
       close: details.close,
     },
-    notice: registration.notice,
-    dismissNotice: registration.dismissNotice,
+    management,
+    notice: registration.notice ?? management.notice,
+    dismissNotice: () => {
+      registration.dismissNotice();
+      management.dismissNotice();
+    },
   };
 }

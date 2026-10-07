@@ -1,6 +1,7 @@
 package io.github.ctrindadedev.lotline.shared.web;
 
 import static io.github.ctrindadedev.lotline.TestSecurity.loggedIn;
+import static io.github.ctrindadedev.lotline.TestSecurity.signUp;
 import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -11,7 +12,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import io.github.ctrindadedev.lotline.IntegrationTest;
+import io.github.ctrindadedev.lotline.identity.service.AccountService;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -39,6 +42,12 @@ class ApiErrorShapeTests {
           + " [-46.99, -22.0], [-47.0, -21.99], [-47.0, -22.0]]]}";
 
   @Autowired MockMvc mockMvc;
+  @Autowired AccountService accountService;
+
+  @BeforeEach
+  void logIn() {
+    signUp(accountService, "seller@example.com");
+  }
 
   static Stream<Arguments> errorPaths() {
     return Stream.of(

@@ -92,7 +92,8 @@ class PlotRepositoryTests {
                         + " -47.06 -22.89, -47.06 -22.90))");
     Plot saved =
         repository.saveAndFlush(
-            new Plot(boundary, new BigDecimal("250000.50"), "Corner plot", "+55 19 99999-0000"));
+            new Plot(
+                boundary, new BigDecimal("250000.50"), "Corner plot", "+55 19 99999-0000", null));
     // Drop the first-level cache so the read below really comes from the database.
     entityManager.clear();
 
