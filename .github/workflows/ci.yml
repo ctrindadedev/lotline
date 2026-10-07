@@ -58,3 +58,20 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage/
           if-no-files-found: ignore
+
+  stack:
+    name: Full stack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Builds both images, then waits until db, api and web report healthy
+      - run: docker compose up --build --wait --wait-timeout 300
+      - name: The app is served and the API answers through nginx, with the sample plots
+        run: |
+          curl -fsS http://localhost:8080/ | grep -q '<div id="root">'
+          curl -fsS 'http://localhost:8080/api/v1/plots?bbox=-47.2,-23.0,-46.9,-22.8' \
+            | jq -e '.features | length >= 6'
+      - if: failure()
+        run: docker compose logs
+      - if: always()
+        run: docker compose down -v
