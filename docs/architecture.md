@@ -191,6 +191,7 @@ erDiagram
 - **`geometry(Polygon, 4326)`** (ADR 0004): the column type rejects any other shape or SRID, and a check constraint rejects invalid polygons. Topology (`ST_Relate`, `ST_Intersects`) runs on `geometry`.
 - **Measurements cast to `geography`** for metres and square metres on the Earth's surface; plain `geometry` math in 4326 would answer in degrees.
 - **Two GiST indexes:** one on `boundary` for overlap and viewport queries, one on the expression `(boundary::geography)` for radius search (ADR 0010). Tests run `EXPLAIN` and check that the queries use them.
+- **B-tree indexes on `owner_id` and `buyer_id`.** PostgreSQL indexes primary and unique keys but never the referencing side of a foreign key; the list of a user's plots filters by both, and deleting a user checks them.
 - Migrations are Liquibase formatted SQL (ADR 0003). The sample plots are a changeset in the `demo` context, which only docker compose enables.
 
 ## 6. Runtime flows

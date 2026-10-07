@@ -71,6 +71,16 @@ jobs:
           curl -fsS http://localhost:8080/ | grep -q '<div id="root">'
           curl -fsS 'http://localhost:8080/api/v1/plots?bbox=-47.2,-23.0,-46.9,-22.8' \
             | jq -e '.features | length >= 6'
+      - name: The app is served with security headers and no nginx version
+        run: |
+          for page in / /assets/; do
+            headers=$(curl -sS -o /dev/null -D - "http://localhost:8080$page")
+            echo "$headers" | grep -qi '^x-content-type-options: nosniff'
+            echo "$headers" | grep -qi '^x-frame-options: DENY'
+            echo "$headers" | grep -qi '^referrer-policy: strict-origin-when-cross-origin'
+            # A negated command never fails a step under set -e: test it explicitly.
+            if echo "$headers" | grep -qi '^server: nginx/'; then exit 1; fi
+          done
       - name: An anonymous visitor gets the CSRF cookie needed to log in
         run: |
           curl -sS -o /dev/null -D - http://localhost:8080/api/v1/auth/me \

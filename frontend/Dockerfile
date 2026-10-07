@@ -10,5 +10,6 @@ RUN npm run build
 FROM nginxinc/nginx-unprivileged:1.30-alpine
 ENV API_UPSTREAM=http://api:8080
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
+COPY nginx/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 8080
