@@ -236,7 +236,7 @@ sequenceDiagram
     SPA->>API: POST /api/v1/plots (GeoJSON Polygon + fields)
     API->>API: Bean Validation (400), GeoJSON → JTS polygon, SRID 4326
     API->>API: PlotGeometryValidator: SRID, ranges, vertices, topology (422)
-    API->>DB: ST_Area(boundary::geography) ≤ 100 km² (422)
+    API->>DB: area ≤ 100 km² and area ÷ perimeter ≥ 0.5 m, on segmentized geography (422)
     API->>DB: pg_advisory_xact_lock (ADR 0009)
     API->>DB: interiors intersect (ST_Relate) and shared area > 1 m² (ADR 0008)
     alt overlaps a plot
@@ -340,7 +340,7 @@ flowchart LR
 | [0004](adr/0004-plot-boundary-as-geometry-4326.md)                 | Plot boundaries stored as `geometry(Polygon, 4326)`                                       |
 | [0005](adr/0005-hand-written-geojson-mapper.md)                    | Hand-written GeoJSON ↔ JTS mapper                                                         |
 | [0006](adr/0006-semantic-exceptions-mapped-once.md)                | Semantic base exceptions, mapped to HTTP in one place                                     |
-| [0007](adr/0007-plot-geometry-validation-and-limits.md)            | Geometry validation and limits (500 positions, 100 km², no repair)                        |
+| [0007](adr/0007-plot-geometry-validation-and-limits.md)            | Geometry validation and limits (500 positions, 100 km², about 2 m across, no repair)      |
 | [0008](adr/0008-plot-overlap-rule-and-tolerance.md)                | Overlap rule: shared borders allowed, overlaps above 1 m² rejected                        |
 | [0009](adr/0009-serialize-plot-registration-with-advisory-lock.md) | Registrations serialized with a transaction-scoped advisory lock                          |
 | [0010](adr/0010-radius-search-on-geography.md)                     | Radius search on `geography`, with an expression index                                    |

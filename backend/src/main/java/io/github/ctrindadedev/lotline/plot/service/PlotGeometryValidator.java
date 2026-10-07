@@ -1,6 +1,7 @@
 package io.github.ctrindadedev.lotline.plot.service;
 
 import io.github.ctrindadedev.lotline.plot.exception.InvalidGeometryException;
+import io.github.ctrindadedev.lotline.plot.persistence.PlotMeasures;
 import io.github.ctrindadedev.lotline.plot.persistence.PlotRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -20,6 +21,8 @@ public class PlotGeometryValidator {
   // Wider shapes are stored as a band around the globe but measured by the short way across it.
   static final double MAX_LONGITUDE_SPAN = 180;
   static final double MAX_AREA_SQUARE_METERS = 100_000_000;
+  // Area per metre of border: about half the width of a strip, so roughly 2 m across at least.
+  static final double MIN_THICKNESS_METERS = 0.5;
 
   private final PlotRepository plotRepository;
 
@@ -62,14 +65,24 @@ public class PlotGeometryValidator {
               + " near "
               + format(error.getCoordinate()));
     }
-    double area = plotRepository.areaInSquareMeters(boundary);
-    if (area > MAX_AREA_SQUARE_METERS) {
+    PlotMeasures measures = plotRepository.measure(boundary);
+    if (measures.getArea() > MAX_AREA_SQUARE_METERS) {
       throw new InvalidGeometryException(
           String.format(
               Locale.ROOT,
               "The boundary covers %.0f m², maximum %.0f m²",
-              area,
+              measures.getArea(),
               MAX_AREA_SQUARE_METERS));
+    }
+    double thickness = measures.getArea() / measures.getPerimeter();
+    if (!(thickness >= MIN_THICKNESS_METERS)) {
+      throw new InvalidGeometryException(
+          String.format(
+              Locale.ROOT,
+              "The boundary is too small or too thin: its area per metre of border is %.2f m,"
+                  + " minimum %.2f m (a plot about 2 m across)",
+              thickness,
+              MIN_THICKNESS_METERS));
     }
   }
 

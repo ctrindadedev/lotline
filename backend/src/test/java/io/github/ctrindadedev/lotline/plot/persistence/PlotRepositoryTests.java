@@ -88,10 +88,12 @@ class PlotRepositoryTests {
   }
 
   @Test
-  void measuresAreaInSquareMetersOnTheEarthSurface() {
+  void measuresAreaAndPerimeterInMetresOnTheEarthSurface() {
     // 0.01 deg of longitude at 22 S is about 1,032 m; 0.01 deg of latitude is about 1,106 m.
-    assertThat(repository.areaInSquareMeters(polygon(SQUARE_WKT)))
-        .isCloseTo(1_141_000, withinPercentage(2));
+    PlotMeasures measures = repository.measure(polygon(SQUARE_WKT));
+
+    assertThat(measures.getArea()).isCloseTo(1_141_000, withinPercentage(2));
+    assertThat(measures.getPerimeter()).isCloseTo(2 * (1_032 + 1_106), withinPercentage(2));
   }
 
   @Test

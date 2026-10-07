@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.github.ctrindadedev.lotline.plot.exception.InvalidGeometryException;
+import io.github.ctrindadedev.lotline.plot.persistence.PlotMeasures;
 import io.github.ctrindadedev.lotline.plot.persistence.PlotRepository;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -24,8 +25,15 @@ class PlotGeometryValidatorTests {
   private final PlotGeometryValidator validator = new PlotGeometryValidator(plotRepository);
 
   @BeforeEach
-  void areaWithinLimit() {
-    when(plotRepository.areaInSquareMeters(any())).thenReturn(1_141_000.0);
+  void measuresWithinLimits() {
+    givenMeasures(1_141_000.0, 4_276.0);
+  }
+
+  private void givenMeasures(double area, double perimeter) {
+    PlotMeasures measures = mock(PlotMeasures.class);
+    when(measures.getArea()).thenReturn(area);
+    when(measures.getPerimeter()).thenReturn(perimeter);
+    when(plotRepository.measure(any())).thenReturn(measures);
   }
 
   @Test
@@ -98,7 +106,7 @@ class PlotGeometryValidatorTests {
 
   @Test
   void rejectsABoundaryLargerThanTheMaximumArea() {
-    when(plotRepository.areaInSquareMeters(any())).thenReturn(100_000_001.0);
+    givenMeasures(100_000_001.0, 40_000.0);
 
     assertRejected(polygon(SQUARE_WKT), "The boundary covers 100000001 m², maximum 100000000 m²");
   }
@@ -112,7 +120,34 @@ class PlotGeometryValidatorTests {
                         "POLYGON((-47.0 -22.0, -46.99 -21.99, -46.99 -22.0, -47.0 -21.99, -47.0 -22.0))")))
         .isInstanceOf(InvalidGeometryException.class);
 
-    verify(plotRepository, never()).areaInSquareMeters(any());
+    verify(plotRepository, never()).measure(any());
+  }
+
+  @Test
+  void rejectsAPlotThinnerThanTheMinimum() {
+    // A strip 0.98 m wide and 100 m long: 98 m² over 201.96 m of border
+    givenMeasures(98.0, 201.96);
+
+    assertRejected(
+        polygon(SQUARE_WKT),
+        "The boundary is too small or too thin: its area per metre of border is 0.49 m,"
+            + " minimum 0.50 m (a plot about 2 m across)");
+  }
+
+  @Test
+  void acceptsAPlotExactlyAtTheMinimumThickness() {
+    givenMeasures(100.0, 200.0);
+
+    assertThatCode(() -> validator.validate(polygon(SQUARE_WKT))).doesNotThrowAnyException();
+  }
+
+  @Test
+  void rejectsAShapeWithNoMeasurableArea() {
+    givenMeasures(0.0, 0.0);
+
+    assertThatThrownBy(() -> validator.validate(polygon(SQUARE_WKT)))
+        .isInstanceOf(InvalidGeometryException.class)
+        .hasMessageContaining("too small or too thin");
   }
 
   private void assertRejected(Polygon boundary, String message) {

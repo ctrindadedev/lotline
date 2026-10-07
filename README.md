@@ -29,7 +29,7 @@ Browser (React + OpenLayers) ──► nginx ──► Spring Boot API ──►
   - **Overlap:** two plots overlap when their interiors intersect (`ST_Relate`) and the shared area is above 1 m², so neighbours can share a border drawn by hand. Registrations take a transaction-scoped advisory lock so two overlapping plots submitted at once cannot both pass.
   - **Radius search:** `ST_DWithin` on `geography`, in metres on the Earth's surface, served by an expression index, with price and area (`ST_Area` on `geography`) filters in the same query.
   - **Viewport:** `ST_Intersects` with the visible rectangle, on `geometry`.
-  - **Validation:** invalid polygons are rejected with `422`, never repaired. Limits: 500 positions, 100 km².
+  - **Validation:** invalid polygons are rejected with `422`, never repaired. Limits: 500 positions, 100 km², and at least about 2 m across (area ÷ perimeter ≥ 0.5 m), so no plot fits inside the 1 m² overlap tolerance.
 - **Accounts:** a server-side session in an `HttpOnly` cookie with CSRF protection; nginx serves the app and the API on one origin.
 - **Reservations:** `AVAILABLE → RESERVED → SOLD`, with the transitions on the plot entity and a row lock so two buyers cannot reserve the same plot.
 

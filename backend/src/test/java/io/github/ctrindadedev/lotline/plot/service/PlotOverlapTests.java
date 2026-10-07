@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.ctrindadedev.lotline.IntegrationTest;
+import io.github.ctrindadedev.lotline.plot.exception.InvalidGeometryException;
 import io.github.ctrindadedev.lotline.plot.exception.PlotOverlapException;
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -113,6 +114,35 @@ class PlotOverlapTests {
     assertThatThrownBy(() -> create(rectangle(-46.995, -21.998, -46.985, -21.992)))
         .isInstanceOf(PlotOverlapException.class)
         .hasMessage("The boundary overlaps existing plots: " + ids);
+  }
+
+  @Test
+  void rejectsATinyPlotInsideAnExistingOne() {
+    // About 1.0 m by 0.9 m: under the 1 m² overlap tolerance, but too small to be a plot
+    assertTooThin(rectangle(-46.995, -21.995, -46.995 + 9e-6, -21.995 + 9e-6));
+  }
+
+  @Test
+  void rejectsAHairlineSliverAcrossPlots() {
+    // About 1 mm wide and 3 km long, through the existing plot and beyond
+    assertTooThin(rectangle(-47.0, -21.995, -46.97, -21.995 + 1e-8));
+  }
+
+  @Test
+  void rejectsADegenerateSliverThatACastWithoutSegmentsWouldMeasureInSquareKilometres() {
+    assertTooThin(rectangle(-47.0, -23.0, -46.0, -23.0 + 4e-15));
+  }
+
+  @Test
+  void acceptsANarrowButRealPlot() {
+    // About 3 m by 50 m
+    assertAccepted(rectangle(-46.96, -22.0, -46.96 + 2.9e-5, -22.0 + 4.5e-4));
+  }
+
+  private void assertTooThin(Polygon boundary) {
+    assertThatThrownBy(() -> create(boundary))
+        .isInstanceOf(InvalidGeometryException.class)
+        .hasMessageContaining("too small or too thin");
   }
 
   private void assertAccepted(Polygon boundary) {
