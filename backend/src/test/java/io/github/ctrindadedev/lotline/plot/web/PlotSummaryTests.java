@@ -90,6 +90,14 @@ class PlotSummaryTests {
   }
 
   @Test
+  void refusesToSummariseAnAreaLargerThanTheCap() throws Exception {
+    mockMvc
+        .perform(get("/api/v1/plots/summary").param("bbox", "-180,-90,180,90"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.errors[0].field").value("bbox"));
+  }
+
+  @Test
   void validatesTheBoundingBoxLikeTheViewportListing() throws Exception {
     mockMvc
         .perform(get("/api/v1/plots/summary").param("bbox", "-46,-22,-47,-21"))

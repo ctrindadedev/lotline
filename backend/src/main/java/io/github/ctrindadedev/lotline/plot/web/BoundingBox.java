@@ -8,14 +8,18 @@ import jakarta.validation.Payload;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-/** {@code minLng,minLat,maxLng,maxLat} in degrees, each in range and with min below max. */
+/**
+ * {@code minLng,minLat,maxLng,maxLat} in degrees, each in range, with min below max, and at most 3
+ * degrees wide and tall.
+ */
 @Target(PARAMETER)
 @Retention(RUNTIME)
 @Constraint(validatedBy = BoundingBoxValidator.class)
 @interface BoundingBox {
 
   String message() default
-      "must be minLng,minLat,maxLng,maxLat in degrees, in range, with each min below its max";
+      "must be minLng,minLat,maxLng,maxLat in degrees, in range, with each min below its max,"
+          + " at most 3 degrees wide and tall";
 
   Class<?>[] groups() default {};
 

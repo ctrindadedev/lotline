@@ -94,7 +94,7 @@ flowchart TB
 
 | Method and path                                                                                      | Who                      | Purpose                                                                                                     |
 | ---------------------------------------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `GET /plots?bbox=minLng,minLat,maxLng,maxLat`                                                        | anyone                   | Plots that intersect the map viewport (ADR 0011)                                                            |
+| `GET /plots?bbox=minLng,minLat,maxLng,maxLat`                                                        | anyone                   | Plots that intersect the map viewport, box at most 3° wide and tall (ADR 0011)                              |
 | `GET /plots/summary?bbox=minLng,minLat,maxLng,maxLat`                                                | anyone                   | Count per status, total area and min / median / max price per m² of the plots in view, in one PostGIS query |
 | `GET /plots/search?lat&lng&radiusMeters[&minPrice&maxPrice&minAreaSquareMeters&maxAreaSquareMeters]` | anyone                   | Plots that reach into a circle, closest first (ADR 0010, 0012)                                              |
 | `GET /plots/{id}`                                                                                    | anyone                   | One plot                                                                                                    |
